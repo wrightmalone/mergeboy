@@ -57,7 +57,7 @@
         if (progress >= 1) {
           progress = 0;
           MB.pay(recipe.in);
-          const mult = MB.boostMult();
+          const mult = MB.handMult('grinder');
           MB.give(recipe.out, mult);
           MB.app('grinder').crafts++;
           MB.floatFrom(refs.gear, `+${MB.costText({ dust: recipe.out.dust * mult })}`);

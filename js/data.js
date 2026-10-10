@@ -1,5 +1,5 @@
-// Static game data: resources, the apps on the phone, the King's rescue stages,
-// fake ads and crate prizes. Everything tunable lives here.
+// Static game data: resources, the apps on the phone, fake ads, crate prizes
+// and store offers (the King's levels live in levels.js). Everything tunable lives here.
 window.MB = { apps: {} };
 
 MB.RES = {
@@ -7,13 +7,24 @@ MB.RES = {
   dust: { name: 'Dust', icon: '💨' },
   slab: { name: 'Slabs', icon: '🧱' },
   block: { name: 'Blocks', icon: '🟫' },
+  gold: { name: 'Gold', icon: '💰' },
   gem: { name: 'Gems', icon: '💎' },
 };
 
-// Every game on the phone. Games with a `recipe` are links in the production
-// chain: they can be played by hand, and once mastered, automated. `install` is
-// the "download size" paid to unlock the app (null = preinstalled).
-// One automation level runs the recipe `autoRate` times per second.
+// Every game on the phone. Games with a `recipe` produce something and can be
+// played by hand, then (once mastered) automated by an intern.
+//
+// The games are deliberately interdependent so none of them goes stale:
+// - `recipe.in`: what the game consumes (the production chain).
+// - `salary`: what its intern is paid per run, always another game's resource.
+//   A paid intern works 2x; unpaid, they quiet-quit at 1x. Salaries form a loop:
+//   screw <- dust <- grinder <- slabs <- merge <- blocks <- slicer <- gold <- king <- scrap <- screw.
+// - `upgrade`: [resource, base, fromLevel] — each upgrade costs other games' resources,
+//   growing 1.6x per level after `fromLevel`.
+// Manual play stays worth it: hand-played output is multiplied by (1 + intern level)
+// and the King bonus, and a game's intern works 2x while you have that game open.
+// `install` is the "download size" (null = preinstalled). One automation level
+// runs the recipe `autoRate` times per second.
 MB.APPS = {
   screw: {
     name: 'Screw Loose 3D', icon: '🪛', color: 'linear-gradient(135deg,#ff6a3d,#ffb347)',
@@ -22,7 +33,8 @@ MB.APPS = {
     recipe: { in: {}, out: { scrap: 2 } },
     autoRate: 0.4, mastery: 12, masteryUnit: 'plates dropped',
     intern: 'Screwdriver Intern',
-    autoCost: lv => ({ scrap: Math.ceil(20 * 1.6 ** lv) }),
+    salary: { dust: 0.1 },
+    upgrade: [['scrap', 20, 0], ['block', 4, 1], ['gold', 5, 3]],
   },
   grinder: {
     name: 'Grind the Thing', icon: '⚙️', color: 'linear-gradient(135deg,#5a5f73,#9aa3b5)',
@@ -31,7 +43,8 @@ MB.APPS = {
     recipe: { in: { scrap: 2 }, out: { dust: 1 } },
     autoRate: 0.4, mastery: 8, masteryUnit: 'batches ground',
     intern: 'Grind Intern',
-    autoCost: lv => ({ dust: Math.ceil(8 * 1.6 ** lv) }),
+    salary: { slab: 0.02 },
+    upgrade: [['dust', 8, 0], ['slab', 2, 1], ['gold', 5, 3]],
   },
   merge: {
     name: 'Merge Boy', icon: '👦', color: 'linear-gradient(135deg,#7b4dff,#d36bff)',
@@ -40,7 +53,8 @@ MB.APPS = {
     recipe: { in: { dust: 8 }, out: { slab: 1 } },
     autoRate: 0.05, mastery: 3, masteryUnit: 'slabs merged',
     intern: 'Merge Intern',
-    autoCost: lv => ({ slab: Math.ceil(2 * 1.6 ** lv) }),
+    salary: { block: 0.5 },
+    upgrade: [['slab', 2, 0], ['block', 5, 1], ['gold', 8, 3]],
   },
   slicer: {
     name: 'Slice It All!', icon: '🔪', color: 'linear-gradient(135deg,#00b4d8,#48e5c2)',
@@ -49,12 +63,18 @@ MB.APPS = {
     recipe: { in: { slab: 1 }, out: { block: 3 } },
     autoRate: 0.05, mastery: 4, masteryUnit: 'slabs sliced',
     intern: 'Knife Intern',
-    autoCost: lv => ({ block: Math.ceil(6 * 1.6 ** lv) }),
+    salary: { gold: 0.2 },
+    upgrade: [['block', 6, 0], ['dust', 20, 1], ['gold', 10, 3]],
   },
   king: {
     name: 'Rescue the King', icon: '🤴', color: 'linear-gradient(135deg,#ffcf3f,#ff8a00)',
     tagline: 'He needs YOUR help!!! 😱', rating: '4.9',
     install: null,
+    recipe: { in: {}, out: { gold: 2 } },
+    autoRate: 0.04, mastery: 3, masteryUnit: 'levels won',
+    intern: 'Knight',
+    salary: { scrap: 3 },
+    upgrade: [['gold', 10, 0], ['slab', 3, 1], ['block', 15, 2]],
   },
   crate: {
     name: 'Lucky Crate', icon: '🎁', color: 'linear-gradient(135deg,#ff4d8d,#ff9a5a)',
@@ -69,78 +89,7 @@ MB.APPS = {
 };
 
 // Order the automation simulation runs in, upstream first.
-MB.CHAIN = ['screw', 'grinder', 'merge', 'slicer'];
-
-// The larger goal. Each stage: deliver materials, then solve a pull-the-pin
-// puzzle. `layout` is the scene top-to-bottom; `answer` is the pin order that
-// works; any other pin pulled is a failure with its `fails` line.
-MB.KING = [
-  {
-    name: 'The Ditch', cost: { scrap: 25 },
-    peril: 'The King has fallen into a ditch. Again.',
-    layout: ['💰💰💰💰', { pin: 'A', label: 'holds the gold' }, '🤴 ⬇️ (ditch)'],
-    answer: ['A'],
-    win: 'Gold pours into the ditch. The King floats up on a pile of money, as kings do.',
-    fails: {},
-  },
-  {
-    name: 'Lava Moat', cost: { dust: 15 },
-    peril: 'The King is trapped beneath a chamber of lava. He has made some choices.',
-    layout: ['💧💧💧💧', { pin: 'A', label: 'holds the water' }, '🔥🔥🔥🔥', { pin: 'B', label: 'holds the lava' }, '🤴'],
-    answer: ['A', 'B'],
-    win: 'Water + lava = rock. The rock lands next to the King. He stands on it. Science!',
-    fails: { B: 'You dropped lava on the King. 99% of players do this.' },
-  },
-  {
-    name: 'Shark Bridge', cost: { slab: 3 },
-    peril: 'The King is standing on a trapdoor above a shark pit. Nobody knows why.',
-    layout: ['🤴', { pin: 'A', label: "the King's trapdoor" }, '🦈🦈🦈🦈', { pin: 'B', label: 'the shark drain' }, '🕳️ (sewer)'],
-    answer: ['B', 'A'],
-    win: 'The sharks drain into the sewer. The King drops into an empty pit, which is an improvement.',
-    fails: { A: 'The King joined the sharks. They seem to be getting along, honestly.' },
-  },
-  {
-    name: 'Tower of Peril', cost: { block: 20 },
-    peril: 'The King is locked in a cage under a bomb. The bomb is under some water.',
-    layout: ['💧💧💧', { pin: 'A', label: 'holds the water' }, '💣', { pin: 'B', label: 'holds the bomb' }, '🤴🔒', { pin: 'C', label: 'the cage door' }],
-    answer: ['A', 'B', 'C'],
-    win: 'Wet bomb. Sad bomb. Harmless bomb. The King strolls out of the cage.',
-    fails: {
-      B: 'The bomb landed on the King. 💥 He is now abstract art.',
-      C: 'The cage opened directly under a live bomb. Bold.',
-    },
-  },
-  {
-    name: 'The Dragon (Legally Distinct)', cost: { block: 60, slab: 10 },
-    peril: 'A dragon guards the exit. The King owes it money.',
-    layout: ['💰💰💰', { pin: 'A', label: 'holds the treasure' }, '🐉', { pin: 'B', label: 'holds the dragon' }, '🤴', { pin: 'C', label: 'the exit' }],
-    answer: ['A', 'C'],
-    win: 'The dragon is distracted by the gold. The King tiptoes out. Debt: still unpaid.',
-    fails: {
-      B: 'You released the dragon. Onto the King. Why would you do that.',
-      C: 'The King walked out just as the dragon woke up. Should have distracted it first.',
-    },
-  },
-  {
-    name: 'Treasure Trap', cost: { block: 180, dust: 300 },
-    peril: 'The King is surrounded by gold. He is fine with this. He should not be.',
-    layout: ['💰💰💰💰', { pin: 'A', label: 'GOLD' }, '💎💎💎', { pin: 'B', label: 'MORE GOLD' }, '🤴', { pin: 'C', label: 'the King' }],
-    answer: ['C'],
-    win: 'The King leaves the treasure behind. Growth.',
-    fails: {
-      A: 'The King was crushed by his own wealth. Poetic, really.',
-      B: 'The King was crushed by his own wealth. Poetic, really.',
-    },
-  },
-  {
-    name: 'The Throne Room', cost: { block: 600, gem: 10 },
-    peril: 'The final room. The throne awaits. So does a very aggressive pop-up.',
-    layout: ['👑 THRONE', { pin: 'A', label: 'Rescue the King' }, '🤴', { pin: 'B', label: '🔥 50% OFF GEMS 🔥' }],
-    answer: ['A'],
-    win: 'The King rises to his throne.',
-    fails: { B: 'Purchase failed: insufficient dignity. Also, the King fell into a pit.' },
-  },
-];
+MB.CHAIN = ['screw', 'grinder', 'merge', 'slicer', 'king'];
 
 // Interstitial ads. Each frame is [scene, caption]. `app` = which game it advertises.
 MB.ADS = [

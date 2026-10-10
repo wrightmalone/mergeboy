@@ -51,8 +51,8 @@
 
   function finish() {
     const perfects = cuts.filter(c => c.q === 'perfect').length;
-    const mult = MB.boostMult();
-    const blocks = (MB.APPS.slicer.recipe.out.block + perfects) * mult;
+    const mult = MB.handMult('slicer');
+    const blocks = Math.round((MB.APPS.slicer.recipe.out.block + perfects) * mult * 10) / 10;
     MB.give({ block: blocks });
     MB.app('slicer').crafts++;
     let text = `+${blocks} 🟫`;

@@ -85,7 +85,7 @@
     p.falling = true;
     p.vy = -80;
     p.spin = (Math.random() - 0.5) * 5;
-    const a = MB.app('screw'), out = MB.APPS.screw.recipe.out, mult = MB.boostMult();
+    const a = MB.app('screw'), out = MB.APPS.screw.recipe.out, mult = MB.handMult('screw');
     MB.give(out, mult);
     a.crafts++;
     MB.floatText(`+${MB.costText({ scrap: out.scrap * mult })}`, e.clientX, e.clientY);
@@ -95,7 +95,7 @@
   function levelClear() {
     const a = MB.app('screw'), my = token;
     a.level = levelNum;
-    const bonus = 3 * MB.boostMult();
+    const bonus = 3 * MB.handMult('screw');
     MB.give({ scrap: bonus });
     let msg = `LEVEL ${levelNum} CLEAR! Only 1% made it! +${bonus} 🔩`;
     if (Math.random() < 0.15) {

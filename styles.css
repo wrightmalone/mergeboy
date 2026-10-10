@@ -56,18 +56,18 @@ button { font: inherit; color: inherit; }
 .notch { width: 110px; height: 26px; background: #000; border-radius: 14px; }
 #battery { color: var(--bad); }
 
-#resbar { display: flex; gap: 5px; padding: 6px 10px 8px; }
+#resbar { display: flex; gap: 4px; padding: 6px 8px 8px; }
 .res {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: 2px;
   min-width: 0;
-  padding: 4px 6px;
+  padding: 4px 4px;
   background: var(--panel);
   border-radius: 999px;
-  font-size: 13px;
+  font-size: 12px;
   transition: opacity .3s;
 }
 .res b { font-variant-numeric: tabular-nums; }
@@ -406,29 +406,28 @@ h3 { font-family: var(--title); font-weight: 400; font-size: 22px; margin: 8px 0
 .slice-btn { height: 64px; font-family: var(--title); font-size: 24px; }
 
 /* --- Rescue the King -------------------------------------------------------------------- */
-.king-path { font-size: 22px; letter-spacing: 3px; text-align: center; }
-.king-big { font-size: 80px; }
-.peril { margin: 0 0 10px; color: var(--muted); }
-.pin-scene { display: flex; flex-direction: column; gap: 2px; padding: 10px; background: #3b2716; border: 4px solid #6b4a2b; border-radius: 16px; }
-.pin-scene.preview { opacity: .7; }
-.chamber { padding: 10px; background: #0003; border-radius: 8px; font-size: 26px; text-align: center; }
-.pin { display: flex; flex-direction: column; gap: 2px; padding: 4px 0; background: none; border: 0; cursor: pointer; }
-.pin:disabled { cursor: default; }
-.pin-bar {
-  position: relative;
-  height: 12px;
-  background: linear-gradient(180deg, #ffe680, #d4a514);
-  border-radius: 6px;
-  transition: transform .5s cubic-bezier(.5, -0.4, .7, 1), opacity .5s;
-}
-.pin-head { position: absolute; right: -6px; top: -6px; width: 24px; height: 24px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fff2a8, #d4a514); }
-.pin-label { font-size: 12px; color: var(--accent); text-align: right; }
-.pin:not(:disabled):hover .pin-bar { filter: brightness(1.2); }
-.pin.pulled .pin-bar { transform: translateX(110%); opacity: 0; }
-.pin.pulled .pin-label { opacity: .4; text-decoration: line-through; }
-.king-foot { margin-top: 12px; }
-.king-foot .btn { width: 100%; }
-.fail { padding: 10px 12px; background: #ff5d7322; border: 1px solid var(--bad); border-radius: 12px; }
+.king-map { display: flex; flex-direction: column; gap: 8px; }
+.stage-card { display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; }
+.stage-card.current { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 0 18px #ffcf3f33; }
+.stage-card.locked { opacity: .45; }
+.stage-num { font-size: 24px; }
+.stage-info { flex: 1; min-width: 0; }
+.stage-card .btn { flex: none; font-size: 12px; padding: 9px 10px; }
+.king-play { position: relative; display: flex; flex-direction: column; gap: 10px; }
+.king-title { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.hud { font-weight: 800; white-space: nowrap; }
+.pin-stage { position: relative; align-self: center; line-height: 0; }
+.pin-stage canvas { border-radius: 12px; box-shadow: 0 8px 24px #0009; touch-action: none; cursor: pointer; }
+.king-play .row .btn { flex: 1; font-size: 13px; padding: 10px 6px; }
+.king-over { position: absolute; inset: -6px; display: grid; place-items: center; padding: 10px; background: #0009; border-radius: 12px; line-height: 1.4; animation: fade .25s; }
+.over-card { width: 100%; padding: 14px; text-align: center; background: var(--panel); border-radius: 16px; animation: pop-in .3s cubic-bezier(.2, 1.5, .5, 1); }
+.over-card.lose { border: 2px solid var(--bad); }
+.over-card.win { border: 2px solid var(--accent); }
+.over-card p { margin: 6px 0; }
+.over-card .btn { width: 100%; }
+.over-card .row .btn { width: auto; }
+.over-big { font-size: 46px; line-height: 1.1; }
+.reward { font-family: var(--title); font-size: 24px; color: var(--accent); }
 
 /* --- Lucky Crate ------------------------------------------------------------------------- */
 .crate-app { display: flex; flex-direction: column; align-items: center; gap: 12px; }

@@ -232,36 +232,43 @@
     }
     const mastered = a.crafts >= def.mastery;
     const info = $('.auto-info', panel), meter = $('.meter', panel), btn = $('.auto-btn', panel);
-    const cost = def.autoCost(a.auto);
+    const cost = MB.autoCost(id);
+    const icons = cost => Object.keys(cost).map(k => MB.RES[k].icon).join('');
     meter.hidden = mastered;
     if (!mastered) {
       info.innerHTML = `<b>🎓 Mastery</b> ${a.crafts}/${def.mastery} ${def.masteryUnit}
         <div class="small">Prove you can do it. Then never do it again.</div>`;
       $('div', meter).style.width = `${(100 * a.crafts) / def.mastery}%`;
     } else if (!a.auto) {
-      info.innerHTML = '<b>🎓 Mastered!</b> <span class="small">You have earned the right to stop playing this.</span>';
+      info.innerHTML = `<b>🎓 Mastered!</b> <span class="small">You have earned the right to stop playing this.
+        Interns get paid in ${icons(def.salary)} and work 2× when paid.</span>`;
     } else {
-      const runs = MB.runsPerSec(id);
+      const runs = MB.runsPerSec(id) * (a.unpaid ? 1 : 2);
       const outs = Object.entries(def.recipe.out).map(([k, n]) => `${MB.fmtRate(runs * n * MB.boostMult())} ${MB.RES[k].icon}/s`).join(' ');
       const ins = Object.entries(def.recipe.in).map(([k, n]) => `${MB.fmtRate(runs * n)} ${MB.RES[k].icon}/s`).join(' ');
       const status = a.starved
-        ? `<span class="bad">💤 Starved — needs more ${Object.keys(def.recipe.in).map(k => MB.RES[k].icon).join('')}</span>`
+        ? `<span class="bad">💤 Starved — needs more ${icons(def.recipe.in)}</span>`
         : '<span class="good">✅ Playing itself</span>';
-      info.innerHTML = `<b>🤖 Automated · Lv ${a.auto}</b> ${status}
-        <div class="small">Makes ${outs}${ins ? ` · eats ${ins}` : ''}</div>`;
+      const pay = a.unpaid
+        ? `<span class="bad">😒 Unpaid, quiet quitting (1×)</span> — pay: ${MB.costText(def.salary)}/run`
+        : `<span class="good">💼 Paid ${MB.costText(def.salary)}/run → 2×</span>`;
+      info.innerHTML = `<b>🤖 Lv ${a.auto}</b> ${status}
+        <div class="small">Makes ${outs}${ins ? ` · eats ${ins}` : ''}</div>
+        <div class="small">${pay}</div>
+        <div class="small">👀 Boss is watching: 2× · ✋ Hand bonus: ×${MB.handMult(id)}</div>`;
     }
-    btn.textContent = a.auto ? `⬆️ Upgrade to Lv ${a.auto + 1} — ${MB.costText(cost)}` : `🤖 Hire ${def.intern} — ${MB.costText(cost)}`;
+    btn.textContent = a.auto ? `⬆️ Lv ${a.auto + 1} — ${MB.costText(cost)}` : `🤖 Hire ${def.intern} — ${MB.costText(cost)}`;
     btn.disabled = !mastered || !MB.can(cost);
   };
 
   MB.buyAuto = function (id) {
     const def = MB.APPS[id], a = MB.app(id);
-    if (a.crafts < def.mastery || !MB.pay(def.autoCost(a.auto))) return;
+    if (a.crafts < def.mastery || !MB.pay(MB.autoCost(id))) return;
     a.auto++;
     if (a.auto === 1) {
       MB.modal({
         title: '🤖 Automated!',
-        body: `<p><b>${def.name}</b> now plays itself.</p><p>You never have to open it again.</p><p class="small">(You will anyway.)</p>`,
+        body: `<p><b>${def.name}</b> now plays itself.</p><p>You never have to open it again.</p><p class="small">(You will anyway: it works 2× while you watch, 2× when paid in ${Object.keys(def.salary).map(k => MB.RES[k].icon).join('')}, and your own taps now pay ×${MB.handMult(id)}.)</p>`,
       });
     } else {
       MB.toast(`⬆️ ${def.intern} promoted to Lv ${a.auto}. No raise.`);

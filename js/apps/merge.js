@@ -39,7 +39,7 @@
     if (tier === MAX) {
       board[i] = 0;
       sel = null;
-      const mult = MB.boostMult();
+      const mult = MB.handMult('merge');
       MB.give(MB.APPS.merge.recipe.out, mult);
       MB.app('merge').crafts++;
       MB.floatText(`+${MB.costText({ slab: mult })}`, e.clientX, e.clientY);

@@ -262,6 +262,7 @@
       options: [
         { metric: 'screw.plate', amount: 6, reward: { type: 'lives', n: 1 }, label: '+1 ❤️' },
         { metric: 'grinder.batch', amount: 5, reward: { type: 'lives', n: 2 }, label: '+2 ❤️' },
+        { metric: 'sort.win', amount: 1, reward: { type: 'lives', n: 2 }, label: '+2 ❤️' },
         { metric: 'king.win', amount: 1, reward: { type: 'lives', n: 99 }, label: 'Full ❤️' },
       ],
       wait: `wait ${mmss((a().lifeAt - Date.now()) / 1000)} for the next life, like a reasonable person`,

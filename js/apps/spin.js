@@ -22,7 +22,7 @@
     'No hard feelings. Literally none. I am an NPC. — Goose',
   ];
   // Spins come from winning (hand-played) in other games.
-  const SPIN_SOURCES = { 'match3.win': 1, 'army.win': 1, 'king.win': 2, 'crowd.win': 1, 'merge.slab': 1, 'slicer.slab': 1, 'board.lap': 1 };
+  const SPIN_SOURCES = { 'match3.win': 1, 'army.win': 1, 'king.win': 2, 'crowd.win': 1, 'merge.slab': 1, 'slicer.slab': 1, 'board.lap': 1, 'mob.wave': 1, 'sort.win': 1, 'park.win': 1 };
 
   let root, spinning = false, token = 0;
   const a = () => MB.app('spin');
@@ -72,6 +72,7 @@
         { metric: 'match3.win', amount: 1, reward: { type: 'spins', n: 3 }, label: '+3 spins' },
         { metric: 'army.win', amount: 1, reward: { type: 'spins', n: 3 }, label: '+3 spins' },
         { metric: 'board.lap', amount: 1, reward: { type: 'spins', n: 2 }, label: '+2 spins' },
+        { metric: 'sort.win', amount: 1, reward: { type: 'spins', n: 3 }, label: '+3 spins' },
         { metric: 'screw.plate', amount: 6, reward: { type: 'spins', n: 1 }, label: '+1 spin' },
       ],
       wait: 'just win anything, anywhere: every win elsewhere earns a spin',

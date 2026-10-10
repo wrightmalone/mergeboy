@@ -100,6 +100,7 @@
         { metric: 'army.win', amount: 1, reward: { type: 'speedup', secs: 600, build: id }, label: '−10 min' },
         { metric: 'slicer.slab', amount: 3, reward: { type: 'speedup', secs: 300, build: id }, label: '−5 min' },
         { metric: 'board.lap', amount: 2, reward: { type: 'speedup', secs: 300, build: id }, label: '−5 min' },
+        { metric: 'park.win', amount: 1, reward: { type: 'speedup', secs: 600, build: id }, label: '−10 min' },
         { metric: 'king.win', amount: 1, reward: { type: 'speedup', finish: true, build: id }, label: 'Finish instantly' },
       ],
       wait: `wait ${fmtTime((b.endsAt - Date.now()) / 1000)} (every hand-played action anywhere takes ${HUSTLE_SECS}s off)`,

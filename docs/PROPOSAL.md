@@ -27,6 +27,9 @@ This one rule gives the whole design its shape:
 | 🍬 Match Royale | Candy Crush / Royal Match | ⭐ Stars (+ a bit of everything) | Out of lives / "+5 moves" / hammers → errands |
 | 🪖 Last Army: Merge War | Top War / Last War | 🎖️ Medals | Out of ⚡ / "SO CLOSE! Power Pack" → errands |
 | 🏃 Crowd Run 3D | Count Masters, the Last War ad | Recruits → Last Army | Lost to the boss → "revive" errand |
+| 🚪 Mob Gates 3D | the Mob Control / Last War *ads* | 🦴 Bones | *(none: the ad, but real)* |
+| 🧪 Potion Sort | water-sort puzzles | 🧪 Potions | *(none)* |
+| 🚗 Car Park Jam | parking-jam puzzles | 🔑 Keys | *(none)* |
 | 🎰 Goose Master | Coin Master | 💎 Gems (via goose village) | Out of spins → **only** wins elsewhere give spins |
 | 🎲 Landlord GO! | Monopoly GO | 🔩💨🧱🟫💰⭐ from tiles; landmarks cost 🟫 + 💰 | Out of dice → **only** wins elsewhere give dice; ×3 multiplier cap; sticker duplicates trade in |
 | 🏰 Clash of Kingdoms | Clash of Clans / 4X | Permanent boosts for other games | Build timers → hustle, bot "alliance help", errands |
@@ -43,8 +46,11 @@ flowchart LR
   merge -->|🧱| slicer[🔪 Slicer<br/>🟫]
   king[🤴 King<br/>💰] -->|💰 recruits| army[🪖 Last Army<br/>🎖️]
   crowd[🏃 Crowd Run] -->|recruits| army
+  mob[🚪 Mob Gates<br/>🦴]
+  sort[🧪 Potion Sort<br/>🧪]
+  park[🚗 Car Park<br/>🔑]
   upgrades{{every game's upgrades<br/>paid in OTHER games' currencies}}
-  screw & grinder & merge & slicer & king & army -.-> upgrades
+  screw & grinder & merge & slicer & king & army & mob & sort & park -.-> upgrades
   match3[🍬 Match Royale<br/>⭐] -.-> upgrades
   slicer & match3 & army -->|🟫 ⭐ 🎖️| base[🏰 Clash of Kingdoms]
   base -.->|+% payouts, faster bots| upgrades
@@ -65,16 +71,20 @@ flowchart LR
    upgrades plus game-specific ones that change the game itself, for your hands too.
    - **Screw Loose:** more plates per board (a bigger clear bonus), golden ×3 plates, ✨ bonus
      boards.
+   - **Mob Gates:** stronger gates, bigger shots, smarter aim.
+   - **Potion Sort:** more colours (more potions), a smarter Pour Bot.
+   - **Car Park:** bigger lots, parking sensors.
 
    Each upgrade line costs 2–3 *other* currencies, so wanting a faster Screwbot sends you to
-   Grind the Thing and Merge Boy.
+   Grind the Thing, Merge Boy and the potion vials.
 4. **The main goal.** Rescue the King's 9 stages cost materials from across the phone. Late
    stages need ⭐ and 🎖️ too.
 5. **Clash of Kingdoms boosts.** Buildings turn currencies into permanent +% payouts:
    - Workshop → 🪛⚙️
    - Lab → 👦🔪
    - Treasury → 🤴🍬🎲
-   - Barracks → 🪖🏃
+   - Barracks → 🪖🚪🏃
+   - Apothecary → 🧪🚗
    - Candy Factory → +❤️/⚡ caps
    - Bot Garage → every bot moves sooner
 6. **Errands (the paywall replacement).** `js/errands.js`:
@@ -116,7 +126,7 @@ Smaller ideas from the research:
    - keep them as is,
    - make them opt-in only (the 2× boost button), or
    - add a setting.
-3. **How many games?** There are now 14 icons. New players may want a slower unlock order, or a
+3. **How many games?** There are now 17 icons. New players may want a slower unlock order, or a
    "folder" for side games (Crate, Goose Master, Crowd Run).
 4. **Names.** "Clash of Kingdoms", "Last Army", "Match Royale" and "Goose Master" are meant as
    parody. If this ships publicly, a quick trademark/parody check would be worth it.
@@ -128,6 +138,8 @@ Smaller ideas from the research:
    - **🧱 Slabs are the scarce currency:** Merge Bot needs ~15 moves per slab.
    - **The Knight was dominant at first.** He now keeps half of each run ("he has a horse to
      feed").
+   - **Mob Gates' off-screen estimate is easier than watching it live,** so a bot can sit on a
+     wave while you watch and then clear it once the app is closed.
 
 ## Known gaps (as of this pass)
 

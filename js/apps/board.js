@@ -51,7 +51,7 @@
     { text: 'Roll again, on the house.', dice: 1 },
   ];
   // Dice come from winning (hand-played) in other games.
-  const DICE_SOURCES = { 'match3.win': 3, 'army.win': 3, 'king.win': 3, 'crowd.win': 2, 'base.build': 2, 'merge.slab': 1, 'slicer.slab': 1 };
+  const DICE_SOURCES = { 'match3.win': 3, 'army.win': 3, 'king.win': 3, 'crowd.win': 2, 'base.build': 2, 'merge.slab': 1, 'slicer.slab': 1, 'mob.wave': 2, 'sort.win': 2, 'park.win': 2 };
 
   let root, rolling = false, token = 0;
   const a = () => MB.app('board');

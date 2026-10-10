@@ -204,10 +204,37 @@ the original wording.
 - **Pressure:** energy per run, upgrade costs, and late-chapter walls. ([marlvel, AI summary](https://marlvel.ai/apps/survivor-io/reviews))
 - **Proposed:** 3-minute runs with no energy. When you hit a wall, it tells you which game to play for the upgrade.
 
-**20. Count Masters / Mob Control** (crowd-gate runners). ✅ *Crowd Run 3D*
+**20. Count Masters / Mob Control** (crowd-gate runners). ✅ *Crowd Run 3D* + *Mob Gates 3D*
 
 - **Pressure:** interstitials after nearly every level, and "remove ads" purchases that disappoint. ([chrome-stats](https://chrome-stats.com/d/id1562817072))
 - **MergeBoy twist:** no energy bar and no ads. Losing offers a "revive" errand.
+
+---
+
+### Added later at the user's request
+
+**21. Water-sort / "sort the liquid" puzzles.** ✅ *Potion Sort*
+
+- **Loop:** pour colours between vials until each holds one colour.
+- **Usual pressure:** an "extra vial" booster sold or unlocked with an ad, plus ads between levels.
+- **MergeBoy twist:**
+  - Every puzzle is checked solvable before it's dealt.
+  - Restart is free.
+  - Sorted vials pay 🧪 potions that upgrade other games.
+
+**22. Parking-jam / "empty the car park" puzzles.** ✅ *Car Park Jam*
+
+- **Loop:** tap cars to drive them out of a jammed lot.
+- **Usual pressure:** interstitials, and paid "remove a car" boosters.
+- **MergeBoy twist:**
+  - Every lot is checked solvable.
+  - Bumping costs nothing.
+  - Each escaped car pays a 🔑.
+
+**23. Mob Control / Last War *ads*** (as opposed to the games). ✅ *Mob Gates 3D*
+
+- **What the ad shows:** units pouring through ×2/+N gates to crush an oncoming horde.
+- **Baby version:** a canvas game that is literally the ad. A cannon, gates, a horde, a wall.
 
 ---
 

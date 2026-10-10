@@ -148,6 +148,7 @@
         { metric: 'match3.win', amount: 1, reward: { type: 'energy', n: 3 }, label: '+3 ⚡' },
         { metric: 'screw.plate', amount: 8, reward: { type: 'energy', n: 1 }, label: '+1 ⚡' },
         { metric: 'merge.slab', amount: 2, reward: { type: 'energy', n: 2 }, label: '+2 ⚡' },
+        { metric: 'park.win', amount: 1, reward: { type: 'energy', n: 3 }, label: '+3 ⚡' },
       ],
       wait: `wait ${mmss((a().energyAt - Date.now()) / 1000)} for the next ⚡`,
     });
@@ -161,6 +162,7 @@
       options: [
         { metric: 'slicer.slab', amount: 3, reward: { type: 'armyBuff', pct: 25 }, label: '+25% power next battle' },
         { metric: 'king.win', amount: 1, reward: { type: 'armyBuff', pct: 50 }, label: '+50% power next battle' },
+        { metric: 'mob.wave', amount: 2, reward: { type: 'armyBuff', pct: 30 }, label: '+30% power next battle' },
       ],
       wait: 'merge some more troops (it also works)',
     });

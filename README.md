@@ -32,6 +32,9 @@ Progress saves to `localStorage`. The ⟲ button in the dock resets it.
 | 🍬 Match Royale | Candy Crush / Royal Match | Match 3 with lives, moves and boosters (all parody) | ⭐ Stars + a bit of everything |
 | 🪖 Last Army: Merge War | Top War / Last War | Merge troops, battle waves | 🎖️ Medals |
 | 🏃 Crowd Run 3D | Count Masters (the Last War ad) | Pick ×2 / +N gates, beat the boss crowd | Recruits for Last Army |
+| 🚪 Mob Gates 3D | The Mob Control / Last War *ads* | Aim a cannon; units multiply through gates and smash the incoming horde | 🦴 Bones |
+| 🧪 Potion Sort | "Sort the liquid" vial puzzles | Pour colours between vials until each holds one colour | 🧪 Potions |
+| 🚗 Car Park Jam | "Empty the car park" puzzles | Tap cars to drive them out; blocked ones just bump | 🔑 Keys |
 | 🎰 Goose Master | Coin Master | An honestly labelled slot machine; spins only from wins elsewhere | 💎 Gems (via goose village) |
 | 🎲 Landlord GO! | Monopoly GO | Roll around a board; dice only from wins elsewhere, ×3 cap, stickers whose duplicates trade in | A bit of everything; landmarks raise payouts |
 | 🏰 Clash of Kingdoms | Clash of Clans / 4X | Timed building upgrades with no gem skips | Permanent boosts for every other game |
@@ -65,7 +68,8 @@ where you came from; a paused Match Royale level is still waiting for its extra 
 Every production game can hire a bot once you've mastered it by hand. The bot
 plays the **same board you see**, one move at a time: Screwbot hovers over a
 screw while its timer ring fills, then unscrews it; the Knight pulls pins on a
-stage while the physics plays out; Candy Bot makes one swap at a time. They start slow on purpose (Screwbot: one screw every 15 seconds).
+stage while the physics plays out; the Valet Bot tries a car (and sometimes
+bumps it). They start slow on purpose (Screwbot: one screw every 15 seconds).
 
 While an app is closed, its bot keeps playing headlessly with the same rules,
 so offline progress is real play, not a formula. Each bot has a speed floor
@@ -82,6 +86,7 @@ Each game has an upgrade tree (`upgrades` in `js/data.js`), always paid for in
   - Screw Loose: more plates per board (a bigger clear bonus), golden ×3
     plates, ✨ bonus boards.
   - Slicer: more cuts per slab, a steadier bot hand.
+  - Mob Gates: stronger gates, bigger shots, smarter aim.
 - **Clash of Kingdoms** buildings add permanent +% payouts per game, and the
   Bot Garage speeds up every bot.
 - **Rescue the King**: every first clear makes everything you and your bots

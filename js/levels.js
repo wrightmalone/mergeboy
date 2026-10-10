@@ -94,7 +94,7 @@ MB.KING = [
     win: 'Boom. No more goblins. The King did not even look up from his gold.',
   },
   {
-    name: 'The Dragon (Legally Distinct)', cost: { block: 60, slab: 10 },
+    name: 'The Dragon (Legally Distinct)', cost: { block: 60, medal: 15 },
     peril: 'A dragon sleeps on a pile of gold. The King owes it money.',
     map: [
       '###########',
@@ -111,7 +111,7 @@ MB.KING = [
     win: 'The dragon is toast. The gold is the King’s. The debt is forgiven (the dragon is toast).',
   },
   {
-    name: 'Flood Gate', cost: { block: 120, dust: 200 },
+    name: 'Flood Gate', cost: { block: 120, dust: 200, star: 20 },
     peril: 'The gold sank under a lava lake. The water tower is around the corner. Plumbing time.',
     map: [
       '##############',
@@ -135,7 +135,7 @@ MB.KING = [
     win: 'One water tower, one lava lake, zero dead kings. Civil engineering!',
   },
   {
-    name: 'The Gauntlet', cost: { block: 250, gold: 80 },
+    name: 'The Gauntlet', cost: { block: 250, medal: 40 },
     peril: 'Monsters, bombs, lava, and one floor holding all of it up. The full brochure.',
     map: [
       '###############',
@@ -154,7 +154,7 @@ MB.KING = [
     win: 'Every monster down. The King walks the gauntlet, picking up coins like a Roomba.',
   },
   {
-    name: 'The Throne Room', cost: { block: 600, gold: 200, gem: 10 },
+    name: 'The Throne Room', cost: { block: 600, star: 80, medal: 80 },
     peril: 'The final room. The throne awaits. So does a very aggressive pop-up.',
     map: [
       '##############',

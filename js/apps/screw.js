@@ -88,6 +88,7 @@
     const a = MB.app('screw'), out = MB.APPS.screw.recipe.out, mult = MB.handMult('screw');
     MB.give(out, mult);
     a.crafts++;
+    MB.track('screw.plate');
     MB.floatText(`+${MB.costText({ scrap: out.scrap * mult })}`, e.clientX, e.clientY);
     if (plates.every(q => q.falling)) levelClear();
   }

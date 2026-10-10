@@ -122,7 +122,19 @@
   function hint() {
     const next = MB.KING[stageIdx].solution.find(id => !sim.pins[id].pulled);
     if (!next || sim.outcome) return;
-    if (!MB.pay(HINT_COST)) { MB.toast('Hints cost 💎. Have you considered watching an ad?'); return; }
+    if (!MB.pay(HINT_COST)) {
+      MB.paywall({
+        title: 'Need a hint? 💡',
+        item: '💡 Hint',
+        price: `💎 ${HINT_COST.gem} <small>($1.99)</small>`,
+        options: [
+          { metric: 'merge.slab', amount: 2, reward: { type: 'res', res: { gem: 2 } }, label: '+2 💎' },
+          { metric: 'match3.win', amount: 1, reward: { type: 'res', res: { gem: 3 } }, label: '+3 💎' },
+        ],
+        wait: 'just think about it for a minute (the King can wait)',
+      });
+      return;
+    }
     hinted = next;
     MB.toast('💡 The glowing pin is next. (Assuming you followed the plan so far.)');
   }
@@ -175,6 +187,7 @@
     const earned = Math.round(sim.gold * MB.handMult('king'));
     MB.give({ gold: earned });
     MB.app('king').crafts++;
+    MB.track('king.win');
     const firstClear = stageIdx === s.king;
     const final = firstClear && stageIdx === MB.KING.length - 1;
     if (firstClear) {

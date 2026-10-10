@@ -97,6 +97,7 @@
     screen.innerHTML = '';
     const home = MB.h(`<div class="home">
       <button class="widget" data-app="king"></button>
+      <div class="errands-home"></div>
       <div class="grid"></div>
       <div class="dock">
         <button class="btn boost"></button>
@@ -149,6 +150,15 @@
       w.innerHTML = `<span class="w-icon">🤴</span><div><b>Rescue the King</b> · Stage ${s.king + 1}/${MB.KING.length}
         <div class="small">${st.name} — ${need}</div>
         <div class="meter"><div style="width:${(100 * s.king) / MB.KING.length}%"></div></div></div>`;
+    }
+
+    const errands = $('.errands-home', home), list = MB.state.errands;
+    const key = JSON.stringify(list.map(e => [e.id, e.progress]));
+    if (errands.dataset.key !== key) {
+      errands.dataset.key = key;
+      errands.innerHTML = list.length
+        ? `<div class="errands-title">📋 Errands <span class="small">(instead of paying)</span></div>${list.map(e => `<button class="errand-btn" data-app="${MB.METRICS[e.metric].app}">${MB.errandRow(e)}</button>`).join('')}`
+        : '';
     }
 
     const boost = $('.boost', home);
@@ -206,6 +216,7 @@
         <span class="stars">★ ${def.rating}</span>
       </header>
       <div class="tagline-banner">${def.tagline}</div>
+      <div class="errand-strip"></div>
       <div class="app-body"></div>
       ${def.recipe ? '<div class="auto-panel"></div>' : ''}
     </div>`);
@@ -222,7 +233,18 @@
   };
   MB.currentApp = () => current;
 
+  function renderErrandStrip() {
+    const strip = current && $('.errand-strip', current.view);
+    if (!strip) return;
+    const list = MB.errandsIn(current.id);
+    const key = JSON.stringify(list.map(e => [e.id, e.progress]));
+    if (strip.dataset.key === key) return;
+    strip.dataset.key = key;
+    strip.innerHTML = list.map(MB.errandRow).join('');
+  }
+
   MB.renderAutoPanel = function () {
+    renderErrandStrip();
     const panel = current && $('.auto-panel', current.view);
     if (!panel) return;
     const id = current.id, def = MB.APPS[id], a = MB.app(id);
@@ -250,8 +272,8 @@
         ? `<span class="bad">💤 Starved — needs more ${icons(def.recipe.in)}</span>`
         : '<span class="good">✅ Playing itself</span>';
       const pay = a.unpaid
-        ? `<span class="bad">😒 Unpaid, quiet quitting (1×)</span> — pay: ${MB.costText(def.salary)}/run`
-        : `<span class="good">💼 Paid ${MB.costText(def.salary)}/run → 2×</span>`;
+        ? `<span class="bad">😒 Unpaid, quiet quitting (1×)</span> — pay: ${MB.costText(MB.salary(id))}/run`
+        : `<span class="good">💼 Paid ${MB.costText(MB.salary(id))}/run → 2×</span>`;
       info.innerHTML = `<b>🤖 Lv ${a.auto}</b> ${status}
         <div class="small">Makes ${outs}${ins ? ` · eats ${ins}` : ''}</div>
         <div class="small">${pay}</div>

@@ -29,16 +29,16 @@
     if (!lines.length) return;
     MB.modal({
       title: '📬 While you were away…',
-      body: `<p>Your interns kept playing for ${fmtDuration(secs)}.</p><div class="gains">${lines.join('')}</div><p class="small">They did not enjoy it either.</p>`,
+      body: `<p>Your interns kept playing for ${fmtDuration(secs)}.</p><div class="gains">${lines.join('')}</div><p class="small">They did not enjoy it either. (Offline time is capped at 8 hours, and we tell you that.)</p>`,
       buttons: [{ label: 'Collect', primary: true }],
     });
   }
 
+  // Streaks pause instead of resetting: miss a week, pick up where you left off.
   function loginBonus() {
     const s = MB.state, today = new Date().toDateString();
     if (s.login.day === today) return;
-    const yesterday = new Date(Date.now() - 86_400_000).toDateString();
-    s.login.streak = s.login.day === yesterday ? s.login.streak + 1 : 1;
+    s.login.streak += 1;
     s.login.day = today;
     const day = s.login.streak, reward = { scrap: 10 * Math.min(day, 7) };
     MB.give(reward);
@@ -46,8 +46,21 @@
       title: `🎉 DAY ${day} LOGIN BONUS!! 🎉`,
       body: `<div class="login-days">${[1, 2, 3, 4, 5, 6, 7].map(d => `<span class="${d <= Math.min(day, 7) ? 'got' : ''}">${d}</span>`).join('')}</div>
         <p class="center">+${MB.costText(reward)}</p>
-        <p class="small center">Come back tomorrow for slightly more! Don't break the streak. We're watching.</p>`,
+        <p class="small center">Miss a day? Your streak just pauses. It never resets. No notifications, either.</p>`,
       buttons: [{ label: 'CLAIM!!!', primary: true }],
+    });
+  }
+
+  // One gentle nudge per session, the opposite of a retention hook.
+  const BREAK_AFTER_MS = 20 * 60 * 1000, sessionStart = Date.now();
+  let breakShown = false;
+  function breakReminder() {
+    if (breakShown || Date.now() - sessionStart < BREAK_AFTER_MS || MB.modalOpen()) return;
+    breakShown = true;
+    MB.modal({
+      title: '🧘 You’ve been playing for 20 minutes',
+      body: '<p>Stretch? Drink some water? Your interns will keep playing while you’re gone, and nothing here expires.</p>',
+      buttons: [{ label: 'Good idea', primary: true }],
     });
   }
 
@@ -85,12 +98,14 @@
     const now = Date.now(), secs = Math.min((now - lastTick) / 1000, MAX_OFFLINE_SECS);
     lastTick = now;
     advance(secs);
+    for (const fn of MB.tickers) fn();
     MB.state.lastSeen = now;
     MB.renderResBar();
     MB.updateHome();
     MB.renderAutoPanel();
     MB.currentApp()?.mod.refresh?.();
     clock();
+    breakReminder();
     if ((saveT += secs) >= 5) {
       saveT = 0;
       MB.save();

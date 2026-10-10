@@ -7,18 +7,22 @@
     const s = MB.state;
     root.innerHTML = `<div class="store">
       <div class="timer-banner">⏰ DEALS END IN 00:0${Math.floor(Math.random() * 9) + 1}:59 ⏰</div>
+      <p class="small center">(They don’t. This timer resets every time you open the store. So do theirs.)</p>
       ${MB.OFFERS.map(o => {
         const owned = o.once && s.bought[o.id];
-        const price = o.disabled || (owned ? 'OWNED' : MB.costText(o.cost));
+        const price = o.open ? 'Open' : o.disabled || (owned ? 'OWNED' : MB.costText(o.cost));
         return `<div class="offer ${owned ? 'owned' : ''}">
           ${o.tag ? `<span class="offer-tag">${o.tag}</span>` : ''}
           <div><b>${o.title}</b><div class="small">${o.sub}</div></div>
           <button class="btn primary buy" data-id="${o.id}" ${o.disabled || owned ? 'disabled' : ''}>${price}</button>
         </div>`;
       }).join('')}
-      <p class="small center">All prices are in resources. No real money. We're not monsters.<br>(We are a little bit monsters.)</p>
+      <p class="small center">All prices are in resources you earn by playing. No real money, ever.</p>
     </div>`;
-    root.querySelectorAll('.buy').forEach(b => { b.onclick = () => buy(b.dataset.id); });
+    root.querySelectorAll('.buy').forEach(b => {
+      const o = MB.OFFERS.find(x => x.id === b.dataset.id);
+      b.onclick = () => (o.open ? MB.openApp(o.open) : buy(o.id));
+    });
     refresh();
   }
 
@@ -35,7 +39,7 @@
   function refresh() {
     root?.querySelectorAll('.buy').forEach(b => {
       const o = MB.OFFERS.find(x => x.id === b.dataset.id);
-      if (!o.disabled && !(o.once && MB.state.bought[o.id])) b.disabled = !MB.can(o.cost);
+      if (!o.open && !o.disabled && !(o.once && MB.state.bought[o.id])) b.disabled = !MB.can(o.cost);
     });
   }
 

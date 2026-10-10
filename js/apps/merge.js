@@ -42,6 +42,7 @@
       const mult = MB.handMult('merge');
       MB.give(MB.APPS.merge.recipe.out, mult);
       MB.app('merge').crafts++;
+      MB.track('merge.slab');
       MB.floatText(`+${MB.costText({ slab: mult })}`, e.clientX, e.clientY);
       say(LINES[Math.floor(Math.random() * LINES.length)]);
     } else if (sel === null) {

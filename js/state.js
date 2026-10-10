@@ -12,6 +12,7 @@
       boostUntil: 0,
       adsRemoved: false,
       bought: {},
+      errands: [],       // see errands.js
       lastAdAt: Date.now(),
       lastSeen: Date.now(),
       login: { day: '', streak: 0 },
@@ -35,6 +36,9 @@
 
   MB.state = load();
 
+  // Called every factory tick (~4x a second) by main.js.
+  MB.tickers = [];
+  MB.onTick = fn => MB.tickers.push(fn);
 
   MB.save = function () {
     MB.state.lastSeen = Date.now();
@@ -96,11 +100,26 @@
 
   // Hand-played output scales with the intern's level (better tools) and the
   // King's bonus, so playing by hand always out-earns that game's intern.
-  MB.handMult = id => Math.round((1 + MB.app(id).auto) * MB.autoMult() * MB.boostMult() * 10) / 10;
+  MB.handMult = id => Math.round((1 + MB.app(id).auto) * MB.autoMult() * MB.appBonus(id) * MB.boostMult() * 10) / 10;
   MB.watching = id => MB.currentApp?.()?.id === id;
 
   // Base runs per second, before salary. Interns work 2x while you watch.
-  MB.runsPerSec = id => MB.APPS[id].autoRate * MB.app(id).auto * MB.autoMult() * (MB.watching(id) ? 2 : 1);
+  MB.runsPerSec = id => MB.APPS[id].autoRate * MB.app(id).auto * MB.autoMult() * MB.appBonus(id) * (MB.watching(id) ? 2 : 1);
+
+  // Clash of Kingdoms buildings boost the other games (see MB.BUILDINGS).
+  MB.buildingLevel = id => MB.app('base').levels?.[id] || 0;
+  MB.appBonus = function (id) {
+    let bonus = 1;
+    for (const [bid, b] of Object.entries(MB.BUILDINGS)) {
+      if (b.boosts?.includes(id)) bonus += b.perLevel * MB.buildingLevel(bid);
+    }
+    return bonus;
+  };
+  // Intern Dorms make every intern's salary cheaper.
+  MB.salary = function (id) {
+    const mult = Math.max(0.5, 1 - 0.1 * MB.buildingLevel('dorms'));
+    return Object.fromEntries(Object.entries(MB.APPS[id].salary).map(([k, n]) => [k, n * mult]));
+  };
 
   MB.canUpgrade = function (id) {
     const def = MB.APPS[id], a = MB.app(id);
@@ -126,7 +145,7 @@
       const runs = Math.floor(a.acc);
       if (!runs) continue;
       a.acc -= runs;
-      const salary = MB.APPS[id].salary, salaried = Math.min(runs, MB.affordable(salary));
+      const salary = MB.salary(id), salaried = Math.min(runs, MB.affordable(salary));
       for (const [r, n] of Object.entries(salary)) res[r] -= n * salaried;
       plans.push({ id, runs, salary, salaried });
     }

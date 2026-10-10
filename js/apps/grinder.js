@@ -60,6 +60,7 @@
           const mult = MB.handMult('grinder');
           MB.give(recipe.out, mult);
           MB.app('grinder').crafts++;
+          MB.track('grinder.batch');
           MB.floatFrom(refs.gear, `+${MB.costText({ dust: recipe.out.dust * mult })}`);
         }
       }

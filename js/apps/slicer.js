@@ -55,6 +55,7 @@
     const blocks = Math.round((MB.APPS.slicer.recipe.out.block + perfects) * mult * 10) / 10;
     MB.give({ block: blocks });
     MB.app('slicer').crafts++;
+    MB.track('slicer.slab');
     let text = `+${blocks} 🟫`;
     if (perfects === TARGETS.length) {
       MB.give({ gem: 1 });

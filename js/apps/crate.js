@@ -23,7 +23,19 @@
 
   function open() {
     if (opening) return;
-    if (!MB.pay(COST)) { MB.toast('Not enough 💎. Have you considered watching an ad?'); return; }
+    if (!MB.pay(COST)) {
+      MB.paywall({
+        title: 'Not enough gems 💎',
+        item: '💎💎💎 Gem Pouch',
+        price: '$4.99',
+        options: [
+          { metric: 'army.win', amount: 1, reward: { type: 'res', res: { gem: 3 } }, label: '+3 💎' },
+          { metric: 'slicer.slab', amount: 3, reward: { type: 'res', res: { gem: 2 } }, label: '+2 💎' },
+          { metric: 'screw.plate', amount: 10, reward: { type: 'res', res: { gem: 1 } }, label: '+1 💎' },
+        ],
+      });
+      return;
+    }
     opening = true;
     const my = token;
     refs.btn.disabled = true;

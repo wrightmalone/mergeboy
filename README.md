@@ -2,19 +2,20 @@
 
 Every predatory mobile game from the ads, on one fake phone, feeding each other.
 
-Each app is a parody of a game you've seen advertised. Each one produces a
-resource the next one needs. You play each game by hand until you've
-"mastered" it, then hire an intern to play it for you forever. The interns
-keep the factory running (even while the game is closed), but every game keeps
-needing the others, and playing by hand always beats automation. All of it
-feeds the big goal: **Rescue the King**.
+Each app is a parody of a game you've seen advertised, and each produces a
+currency. You play each game by hand until you've "mastered" it, then hire a
+bot that plays it for you: really plays it, on the board you see, one slow move
+at a time. Every upgrade (bot speed, bigger boards, golden plates…) is bought
+with *other* games' currencies, so every game keeps feeding the others. All of
+it feeds the big goal: **Rescue the King**.
 
 ## Run it
 
-No build step. Open `index.html` directly, or serve the folder:
+No build step. Open `index.html` directly, or serve the folder with caching
+turned off (so edits show up on a plain reload):
 
 ```bash
-python3 -m http.server 8123
+python3 tools/serve.py
 ```
 
 Progress saves to `localStorage`. The ⟲ button in the dock resets it.
@@ -32,6 +33,7 @@ Progress saves to `localStorage`. The ⟲ button in the dock resets it.
 | 🪖 Last Army: Merge War | Top War / Last War | Merge troops, battle waves | 🎖️ Medals |
 | 🏃 Crowd Run 3D | Count Masters (the Last War ad) | Pick ×2 / +N gates, beat the boss crowd | Recruits for Last Army |
 | 🎰 Goose Master | Coin Master | An honestly labelled slot machine; spins only from wins elsewhere | 💎 Gems (via goose village) |
+| 🎲 Landlord GO! | Monopoly GO | Roll around a board; dice only from wins elsewhere, ×3 cap, stickers whose duplicates trade in | A bit of everything; landmarks raise payouts |
 | 🏰 Clash of Kingdoms | Clash of Clans / 4X | Timed building upgrades with no gem skips | Permanent boosts for every other game |
 
 Supporting apps:
@@ -58,36 +60,43 @@ where you came from; a paused Match Royale level is still waiting for its extra 
 [docs/PROPOSAL.md](docs/PROPOSAL.md) for how all the games link together, and
 [docs/RESEARCH.md](docs/RESEARCH.md) for the predatory games and patterns this parodies.
 
-## The economy: no game ever goes stale
+## Bots you can watch
 
-Each game is needed by the others for the whole run, not just early on:
+Every production game can hire a bot once you've mastered it by hand. The bot
+plays the **same board you see**, one move at a time: Screwbot hovers over a
+screw while its timer ring fills, then unscrews it; the Knight pulls pins on a
+stage while the physics plays out; Candy Bot makes one swap at a time. They start slow on purpose (Screwbot: one screw every 15 seconds).
 
-- **Production chain**: 🔩 → 💨 → 🧱 → 🟫, consumed down the line, plus 🟫/🧱/💨/🔩 to
-  reach each King stage.
-- **Salaries form a loop.** Each intern is paid per run in *another* game's
-  resource: Screw ← 💨, Grinder ← 🧱, Merge ← 🟫, Slicer ← 💰, King's Knight ← 🔩,
-  Candy Intern ← 🎖️, Drill Sergeant ← ⭐.
-  A paid intern works 2×; an unpaid one quiet-quits at 1×. The end of the chain
-  pays the start, and the King's gold pays the slicer.
-- **Upgrades cost other games' resources.** For example, Screw Lv2 needs 🟫 Blocks
-  from the end of the chain, and Lv4+ of every intern needs 💰 Gold from the King.
-- **Manual play always wins.** Hand-played output is ×(1 + intern level) ×
-  King bonus, so playing a game yourself always beats its intern. While a game
-  is open, its intern also works 2× ("👀 the boss is watching").
-- **Clash of Kingdoms** turns ⭐ 🎖️ 🟫 💰 into permanent +% boosts for the other games. Every
-  hand-played action anywhere speeds up its build timers.
-- **Rescue the King** pays out the gold the King collects. Cleared stages can be
-  replayed for more, or farmed by a Knight intern. Each first clear makes every
-  intern (and your hands) 20% faster.
+While an app is closed, its bot keeps playing headlessly with the same rules,
+so offline progress is real play, not a formula. Each bot has a speed floor
+(`bot.min`), and offline each bot makes at most one move every 2 seconds.
+
+## Upgrades: every game feeds the others
+
+Each game has an upgrade tree (`upgrades` in `js/data.js`), always paid for in
+**other games' currencies**:
+
+- **Hire / speed:** hire the bot (after mastery), then make it move 20% sooner
+  per level.
+- **Game upgrades** that change the game itself, for your hands too. For example:
+  - Screw Loose: more plates per board (a bigger clear bonus), golden ×3
+    plates, ✨ bonus boards.
+  - Slicer: more cuts per slab, a steadier bot hand.
+- **Clash of Kingdoms** buildings add permanent +% payouts per game, and the
+  Bot Garage speeds up every bot.
+- **Rescue the King**: every first clear makes everything you and your bots
+  earn 20% bigger.
+
+Playing by hand is still the fastest way to earn early on, and the bot never
+uses lives, energy or dice it didn't earn.
 
 ### Progression loop
 
-1. **Install** an app by paying its "download size" in upstream resources.
-2. **Master** it: reach N manual crafts.
-3. **Automate** it by hiring an intern. Each level adds a fixed number of runs
-   per second, and cost grows 1.6× per level.
-4. Keep interns **paid** and **fed**. Starved (💤) or unpaid (😒) interns show
-   you which other game needs attention, so you jump in and play it by hand.
+1. **Install** an app by paying its "download size" in another game's currency.
+2. **Master** it: play it by hand N times.
+3. **Hire its bot** and watch it play, slowly.
+4. **Upgrade** it with currency from the other games, which sends you off to
+   play (or upgrade) those.
 
 ## Rescue the King levels
 
@@ -115,16 +124,19 @@ work. The second prints the grid after each pin of a stage's solution.
 
 ```
 index.html, styles.css
-js/data.js        tunables: resources, apps (recipes, salaries, upgrade costs), ads, crate, store
+js/data.js        tunables: resources, apps (bots, upgrade trees), buildings, errand metrics, ads, crate, store
 js/levels.js      Rescue the King stages (ASCII maps, costs, solutions)
 js/pinsim.js      pull-the-pin physics (pure logic, runs in Node too)
 js/state.js       save/load, resource helpers, automation simulation
 js/ui.js          phone shell: home screen, app views, automation panel, modals
 js/ads.js         fake interstitials
 js/errands.js     errands + the parody paywall (MB.track, MB.paywall, MB.REWARDS)
-js/apps/*.js      one file per game: mount(el), update(dt), refresh(), unmount()
+js/bots.js        bot scheduler + upgrades (MB.registerBot, MB.runBots, MB.up, MB.buyUp)
+js/apps/*.js      one file per game: a model (persisted state + rules), its bot, and a view
+                  (mount, update(dt), refresh(), onEvent(evt), unmount)
 js/main.js        boot, factory tick (wall-clock), animation loop, offline catch-up
-tools/            verify-levels.js (headless level checker), sim-economy.js (intern-only economy run)
+tools/            serve.py (no-cache dev server), verify-levels.js (headless level checker),
+                  sim-economy.js (runs every bot headlessly for N hours)
 docs/             PROPOSAL.md (how the games link), RESEARCH.md (predatory games & patterns)
 ```
 
@@ -133,6 +145,11 @@ To add a game:
 1. Add an entry to `MB.APPS`. If it has a `recipe`, also add it to `MB.CHAIN`.
 2. Create `js/apps/<id>.js` that registers `MB.apps[<id>]`.
 3. Add its script tag to `index.html`.
+
+To give it a bot: add `bot` and `upgrades` to its `MB.APPS` entry, keep its state
+in `MB.app(id)`, and register `MB.registerBot(id, { act })` where `act` makes one
+move (or returns a reason it can't). Emit `MB.gameEvent(id, evt)` so the view can
+animate bot moves.
 
 To link it to the others:
 

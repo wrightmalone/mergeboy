@@ -15,10 +15,14 @@
       MB.give(prize.give);
       return prize.note || `+${MB.costText(prize.give)}`;
     }
-    const pool = MB.CHAIN.filter(id => MB.app(id).installed);
-    const id = pool[Math.floor(Math.random() * pool.length)];
-    MB.app(id).auto++;
-    return `Joins ${MB.APPS[id].name}! (+1 automation level, mastery not required)`;
+    // A free level on a random upgrade you could otherwise buy (ignoring the price).
+    const pool = MB.BOT_APPS.filter(id => MB.app(id).installed).flatMap(id =>
+      MB.APPS[id].upgrades.filter(u => ['', 'poor'].includes(MB.upBlocker(id, u.id))).map(u => [id, u]));
+    if (!pool.length) { MB.give({ gem: 3 }); return 'Nothing to upgrade yet, so: +3 💎'; }
+    const [id, u] = pool[Math.floor(Math.random() * pool.length)];
+    const a = MB.app(id);
+    a.up = { ...a.up, [u.id]: MB.up(id, u.id) + 1 };
+    return `${u.name} in ${MB.APPS[id].name} → Lv ${MB.up(id, u.id)}, free!`;
   }
 
   function open() {

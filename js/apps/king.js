@@ -1,10 +1,14 @@
 // Rescue the King: the long-term goal, and the gold mine. Each stage costs
 // materials from the other games to reach, then plays as a pull-the-pin physics
-// puzzle (pinsim.js). Cleared stages can be replayed for 💰 gold, which pays
-// interns and buys upgrades across every other game.
+// puzzle (pinsim.js). Cleared stages can be replayed for 💰 gold, which buys
+// upgrades across every other game.
+//
+// The Knight (this game's bot) replays your highest cleared stage one pin per
+// move, following the known solution. Tap "Watch" to see the run play out with
+// real physics. Treasure Maps add gold to every run, yours or his.
 (function () {
   const MB = window.MB;
-  const HINT_COST = { gem: 2 };
+  const HINT_COST = { gem: 2 }, KNIGHT_CUT = 0.5;
   const DEATHS = {
     burned: 'The King touched lava. 99% of players do this.',
     monster: 'A monster got the King. It was legally distinct, but still.',
@@ -15,8 +19,44 @@
 
   const T = () => MB.PinSim.T;
 
+  // --- The Knight (bot) ------------------------------------------------------------
+  // Gold per Knight run = what the stage's solution actually collects, simulated
+  // once per stage.
+  const goldCache = {};
+  function stageGold(i) {
+    if (goldCache[i] === undefined) {
+      const st = MB.KING[i], run = new MB.PinSim(st, 1);
+      const settle = () => { for (let n = 0; n < 4000 && !run.outcome && (n === 0 || !run.settled); n++) run.step(); };
+      for (const id of st.solution) { run.pull(id); settle(); }
+      goldCache[i] = run.gold;
+    }
+    return goldCache[i];
+  }
+  const knight = () => (MB.app('king').g ||= { stage: 0, pulled: 0 });
+  const treasure = () => 1 + 0.25 * MB.up('king', 'maps');
+
+  MB.registerBot('king', {
+    act({ watched }) {
+      if (!MB.state.king) return 'no cleared stages yet';
+      if (watched && view === 'play') return 'waiting for you to finish your stage';
+      const k = knight();
+      if (k.stage >= MB.state.king) Object.assign(k, { stage: MB.state.king - 1, pulled: 0 });
+      const sol = MB.KING[k.stage].solution;
+      const pin = sol[k.pulled++];
+      MB.gameEvent('king', { type: 'pull', stage: k.stage, pin });
+      if (k.pulled >= sol.length) {
+        // The Knight keeps half. He has a horse to feed.
+        const gold = Math.round(stageGold(k.stage) * KNIGHT_CUT * treasure() * MB.outMult('king'));
+        MB.give({ gold });
+        MB.gameEvent('king', { type: 'run', stage: k.stage, gold });
+        Object.assign(k, { stage: MB.state.king - 1, pulled: 0 });
+      }
+    },
+  });
+
   // --- Stage map -----------------------------------------------------------------
   function showMap() {
+    MB.busy.king = false;
     view = 'map';
     sim = null;
     const s = MB.state;
@@ -34,7 +74,10 @@
       </div>`;
     }).join('');
     const done = s.king >= MB.KING.length;
-    root.innerHTML = `<div class="king-map">
+    const knightCard = MB.hasBot('king') ? `<div class="stage-card knight-card">
+        <div class="stage-num">🗡️</div><div class="stage-info"><b>The Knight’s run</b><div class="small knight-status"></div></div>
+        <button class="btn primary watch">Watch</button></div>` : '';
+    root.innerHTML = `<div class="king-map">${knightCard}
       <p class="small center">${done
         ? '🤴🎉 The King is safe. Replay any stage for 💰. (He keeps falling back in.)'
         : 'Send materials from your other games to reach each stage, then pull the pins. Gold the King collects is yours. Cleared stages can be replayed for more.'}</p>
@@ -50,33 +93,63 @@
       };
     });
     root.querySelector('.ending')?.addEventListener('click', showEnding);
+    root.querySelector('.watch')?.addEventListener('click', watch);
     refresh();
   }
 
   function refresh() {
     if (view !== 'map' || !root) return;
     root.querySelectorAll('.send').forEach(b => { b.disabled = !MB.can(MB.KING[+b.dataset.i].cost); });
+    const status = root.querySelector('.knight-status');
+    if (status) {
+      const k = knight(), wait = MB.app('king').botWait;
+      status.textContent = wait
+        ? `💤 ${wait}`
+        : `Stage ${k.stage + 1} · pin ${k.pulled + 1}/${MB.KING[k.stage].solution.length} · next pull in ${Math.ceil(MB.botEvery('king') * (1 - MB.botProgress('king')))}s`;
+    }
   }
 
   // --- Playing a stage ----------------------------------------------------------
   function play(i) {
-    view = 'play';
+    setup(i, 'play');
+  }
+
+  // Watch the Knight's current run: rebuild its board, catch up on the pins he
+  // already pulled, then follow his moves live.
+  function watch() {
+    const k = knight();
+    if (k.stage >= MB.state.king) Object.assign(k, { stage: MB.state.king - 1, pulled: 0 });
+    setup(k.stage, 'watch', 1);
+    for (const id of MB.KING[k.stage].solution.slice(0, k.pulled)) {
+      sim.pull(id);
+      for (let n = 0; n < 4000 && !sim.outcome && (n === 0 || !sim.settled); n++) sim.step();
+      sim.events.length = 0;
+    }
+    draw();
+  }
+
+  function setup(i, mode, seed) {
+    MB.busy.king = false;
+    view = mode;
     stageIdx = i;
     const st = MB.KING[i];
-    sim = new MB.PinSim(st);
+    sim = new MB.PinSim(st, seed);
     acc = time = 0;
     anims = [];
     effects = [];
     hinted = null;
     overShown = false;
+    const watching = mode === 'watch';
     root.innerHTML = `<div class="king-play">
-      <div class="king-title"><b>${i + 1}. ${st.name}</b><span class="hud"></span></div>
+      <div class="king-title"><b>${watching ? '🗡️ ' : ''}${i + 1}. ${st.name}</b><span class="hud"></span></div>
       <div class="pin-stage"><canvas></canvas></div>
-      <p class="small center">Tap a pin to pull it. Get the gold to the King. Kill every monster. Don't kill the King.</p>
+      <p class="small center">${watching
+        ? 'The Knight is replaying this stage for gold, one pin at a time. You can’t help. He’s very proud.'
+        : 'Tap a pin to pull it. Get the gold to the King. Kill every monster. Don’t kill the King.'}</p>
       <div class="row">
         <button class="btn back-map">‹ Stages</button>
-        <button class="btn restart">↻ Restart</button>
-        <button class="btn hint">💡 Hint · ${MB.costText(HINT_COST)}</button>
+        ${watching ? '' : `<button class="btn restart">↻ Restart</button>
+        <button class="btn hint">💡 Hint · ${MB.costText(HINT_COST)}</button>`}
       </div>
       <div class="king-over" hidden></div>
     </div>`;
@@ -92,14 +165,14 @@
     ctx.scale(dpr, dpr);
     canvas.addEventListener('pointerdown', onTap);
     root.querySelector('.back-map').onclick = showMap;
-    root.querySelector('.restart').onclick = () => play(i);
-    root.querySelector('.hint').onclick = hint;
+    root.querySelector('.restart')?.addEventListener('click', () => play(i));
+    root.querySelector('.hint')?.addEventListener('click', hint);
     hud();
     draw();
   }
 
   function onTap(e) {
-    if (sim.outcome) return;
+    if (sim.outcome || view !== 'play') return;
     const r = canvas.getBoundingClientRect();
     const cx = Math.floor((e.clientX - r.left) / cell), cy = Math.floor((e.clientY - r.top) / cell);
     // Pins are one cell thick; accept taps a cell away.
@@ -147,7 +220,7 @@
   }
 
   function update(dt) {
-    if (view !== 'play' || !sim) return;
+    if ((view !== 'play' && view !== 'watch') || !sim) return;
     time += dt;
     acc += dt;
     const tick = 1 / MB.PinSim.TICKS_PER_SEC;
@@ -163,6 +236,11 @@
     effects = effects.filter(f => f.t < 0.8);
     hud();
     draw();
+    if (view === 'watch') {
+      // Let the physics finish before the Knight pulls his next pin.
+      MB.busy.king = !sim.settled || anims.length > 0;
+      return;
+    }
     if (sim.outcome && !overShown) {
       overShown = true;
       setTimeout(() => { if (view === 'play' && root) finish(); }, sim.outcome === 'win' ? 500 : 900);
@@ -184,7 +262,7 @@
       return;
     }
 
-    const earned = Math.round(sim.gold * MB.handMult('king'));
+    const earned = Math.round(sim.gold * treasure() * MB.outMult('king'));
     MB.give({ gold: earned });
     MB.app('king').crafts++;
     MB.track('king.win');
@@ -199,7 +277,7 @@
       <div class="over-big">🥳</div><h3>${firstClear ? 'STAGE CLEARED!' : 'TREASURE RUN!'}</h3>
       ${firstClear ? `<p>${st.win}</p>` : ''}
       <p class="reward">+${MB.fmt(earned)} 💰${firstClear ? ' · +3 💎' : ''}</p>
-      ${firstClear && !final ? '<p class="small">Every intern now works 20% faster.</p>' : ''}
+      ${firstClear && !final ? '<p class="small">Everything you and your bots earn is now 20% bigger.</p>' : ''}
       <div class="row"><button class="btn again">↻ Replay</button><button class="btn primary next">${final ? '👑 Ending' : 'Stages ›'}</button></div>
     </div>`;
     over.querySelector('.again').onclick = () => play(stageIdx);
@@ -248,6 +326,7 @@
       if (!pin.pulled) drawPin(pin.cells, pin.horizontal, 0, 1, pin.id === hinted, labels[pin.id]);
     }
     for (const a of anims) drawPin(a.cells, a.horizontal, (a.t / 0.4) * c * 4, 1 - a.t / 0.4, false, a.label);
+    if (view === 'watch') drawKnightCursor();
 
     const skin = MB.KING[stageIdx].skin || '👹';
     const kingFace = sim.dead ? '💀' : sim.outcome === 'win' ? '🥳' : '🤴';
@@ -270,6 +349,30 @@
       ctx.fillText(glyph, f.x * c + c / 2, f.y * c + c / 2 - k * c);
       ctx.globalAlpha = 1;
     }
+  }
+
+  // The Knight hovers over the pin he'll pull next, with a ring for his timer.
+  function drawKnightCursor() {
+    const next = sim.pins[MB.KING[stageIdx].solution[knight().pulled]];
+    if (!next || next.pulled || MB.busy.king) return;
+    const c = cell, xs = next.cells.map(p => p[0]), ys = next.cells.map(p => p[1]);
+    const x = next.horizontal ? (Math.max(...xs) + 0.8) * c : (xs[0] + 0.5) * c;
+    const y = next.horizontal ? (ys[0] + 0.5) * c : (Math.min(...ys) + 0.2) * c;
+    ctx.save();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = '#0006';
+    ctx.beginPath();
+    ctx.arc(x, y, c * 0.75, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.strokeStyle = '#ffcf3f';
+    ctx.beginPath();
+    ctx.arc(x, y, c * 0.75, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * MB.botProgress('king'));
+    ctx.stroke();
+    ctx.font = `${c * 1.1}px serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🗡️', x + c * 0.5, y - c * 0.8);
+    ctx.restore();
   }
 
   function drawPin(cells, horizontal, slide, alpha, glow, label) {
@@ -334,16 +437,32 @@
         <blockquote>“Thank you. Now please rate us 5 stars.”</blockquote>
         <p>Then he falls into a new ditch.</p>
         <p><b>Rescue the King 2</b> — coming soon.</p>
-        <p class="small">Thanks for playing the MergeBoy prototype. Your interns will keep playing forever, and the King's stages are open for treasure runs.</p>`,
+        <p class="small">Thanks for playing the MergeBoy prototype. Your bots will keep playing forever, and the King's stages are open for treasure runs.</p>`,
       buttons: [{ label: '⭐⭐⭐⭐⭐', primary: true }],
       onClose: () => { if (root) showMap(); },
     });
+  }
+
+  function onEvent(evt) {
+    if (view !== 'watch' || !sim || evt.stage !== stageIdx) return;
+    if (evt.type === 'pull' && sim.pins[evt.pin] && !sim.pins[evt.pin].pulled) {
+      const pin = sim.pins[evt.pin];
+      anims.push({ cells: pin.cells, horizontal: pin.horizontal, label: MB.KING[stageIdx].labels?.[evt.pin], t: 0 });
+      sim.pull(evt.pin);
+    } else if (evt.type === 'run') {
+      const over = root.querySelector('.king-over');
+      over.hidden = false;
+      over.innerHTML = `<div class="over-card win"><div class="over-big">🗡️</div><h3>RUN COMPLETE</h3><p class="reward">+${MB.fmt(evt.gold)} 💰</p>
+        <p class="small">The Knight starts his next run.</p></div>`;
+      setTimeout(() => { if (view === 'watch' && root) watch(); }, 1600);
+    }
   }
 
   MB.apps.king = {
     mount(el) { root = el; showMap(); },
     update,
     refresh,
-    unmount() { root = sim = null; view = null; },
+    onEvent,
+    unmount() { MB.busy.king = false; root = sim = null; view = null; },
   };
 })();

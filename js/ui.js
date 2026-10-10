@@ -117,7 +117,7 @@
     $('.boost', home).onclick = MB.watchBoostAd;
     $('.reset', home).onclick = () => MB.modal({
       title: 'Reset everything?',
-      body: 'All progress, interns and the King go back to zero.',
+      body: 'All progress, bots and the King go back to zero.',
       buttons: [{ label: 'Cancel' }, { label: 'Reset', onClick: MB.reset }],
     });
     screen.append(home);
@@ -131,10 +131,11 @@
       const id = icon.dataset.app, def = MB.APPS[id], a = MB.app(id);
       let badge = '';
       if (!a.installed) badge = MB.can(def.install) ? 'GET' : '';
-      else if (def.recipe) {
-        if (a.auto) badge = a.starved ? '💤' : '⚙︎';
-        if (MB.canUpgrade(id)) badge = '!';
-      } else if (id === 'king' && MB.kingReady()) badge = '!';
+      else {
+        if (MB.hasBot(id)) badge = a.botWait ? '💤' : '⚙︎';
+        if (def.upgrades && MB.upAvailable(id)) badge = '!';
+        if (id === 'king' && MB.kingReady()) badge = '!';
+      }
       const b = $('.badge', icon);
       b.textContent = badge;
       b.className = `badge${badge ? ' on' : ''}${badge === '⚙︎' ? ' spin' : ''}${badge === '💤' ? ' sleep' : ''}`;
@@ -218,7 +219,7 @@
       <div class="tagline-banner">${def.tagline}</div>
       <div class="errand-strip"></div>
       <div class="app-body"></div>
-      ${def.recipe ? '<div class="auto-panel"></div>' : ''}
+      ${def.bot ? '<div class="auto-panel"></div>' : ''}
     </div>`);
     $('.back', view).onclick = MB.showHome;
     screen.append(view);
@@ -243,59 +244,70 @@
     strip.innerHTML = list.map(MB.errandRow).join('');
   }
 
+  // The bottom panel in every bot game: mastery → hire → the bot's live status,
+  // plus the upgrade tree (paid in other games' currencies).
+  const expanded = {};
+  const BLOCKED = { max: 'MAX', mastery: '🎓 Master it first', nobot: 'Hire the bot first' };
+
   MB.renderAutoPanel = function () {
     renderErrandStrip();
     const panel = current && $('.auto-panel', current.view);
     if (!panel) return;
     const id = current.id, def = MB.APPS[id], a = MB.app(id);
     if (!panel.childElementCount) {
-      panel.innerHTML = '<div class="auto-info"></div><div class="meter"><div></div></div><button class="btn primary auto-btn"></button>';
-      $('.auto-btn', panel).onclick = () => MB.buyAuto(id);
-    }
-    const mastered = a.crafts >= def.mastery;
-    const info = $('.auto-info', panel), meter = $('.meter', panel), btn = $('.auto-btn', panel);
-    const cost = MB.autoCost(id);
-    const icons = cost => Object.keys(cost).map(k => MB.RES[k].icon).join('');
-    meter.hidden = mastered;
-    if (!mastered) {
-      info.innerHTML = `<b>🎓 Mastery</b> ${a.crafts}/${def.mastery} ${def.masteryUnit}
-        <div class="small">Prove you can do it. Then never do it again.</div>`;
-      $('div', meter).style.width = `${(100 * a.crafts) / def.mastery}%`;
-    } else if (!a.auto) {
-      info.innerHTML = `<b>🎓 Mastered!</b> <span class="small">You have earned the right to stop playing this.
-        Interns get paid in ${icons(def.salary)} and work 2× when paid.</span>`;
-    } else {
-      const runs = MB.runsPerSec(id) * (a.unpaid ? 1 : 2);
-      const outs = Object.entries(def.recipe.out).map(([k, n]) => `${MB.fmtRate(runs * n * MB.boostMult())} ${MB.RES[k].icon}/s`).join(' ');
-      const ins = Object.entries(def.recipe.in).map(([k, n]) => `${MB.fmtRate(runs * n)} ${MB.RES[k].icon}/s`).join(' ');
-      const status = a.starved
-        ? `<span class="bad">💤 Starved — needs more ${icons(def.recipe.in)}</span>`
-        : '<span class="good">✅ Playing itself</span>';
-      const pay = a.unpaid
-        ? `<span class="bad">😒 Unpaid, quiet quitting (1×)</span> — pay: ${MB.costText(MB.salary(id))}/run`
-        : `<span class="good">💼 Paid ${MB.costText(MB.salary(id))}/run → 2×</span>`;
-      info.innerHTML = `<b>🤖 Lv ${a.auto}</b> ${status}
-        <div class="small">Makes ${outs}${ins ? ` · eats ${ins}` : ''}</div>
-        <div class="small">${pay}</div>
-        <div class="small">👀 Boss is watching: 2× · ✋ Hand bonus: ×${MB.handMult(id)}</div>`;
-    }
-    btn.textContent = a.auto ? `⬆️ Lv ${a.auto + 1} — ${MB.costText(cost)}` : `🤖 Hire ${def.intern} — ${MB.costText(cost)}`;
-    btn.disabled = !mastered || !MB.can(cost);
-  };
-
-  MB.buyAuto = function (id) {
-    const def = MB.APPS[id], a = MB.app(id);
-    if (a.crafts < def.mastery || !MB.pay(MB.autoCost(id))) return;
-    a.auto++;
-    if (a.auto === 1) {
-      MB.modal({
-        title: '🤖 Automated!',
-        body: `<p><b>${def.name}</b> now plays itself.</p><p>You never have to open it again.</p><p class="small">(You will anyway: it works 2× while you watch, 2× when paid in ${Object.keys(def.salary).map(k => MB.RES[k].icon).join('')}, and your own taps now pay ×${MB.handMult(id)}.)</p>`,
+      panel.innerHTML = `<div class="bot-status"></div><div class="meter bot-meter"><div></div></div>
+        <button class="up-toggle"></button><div class="up-list"></div>`;
+      $('.up-toggle', panel).onclick = () => { expanded[id] = !expanded[id]; panel.dataset.key = ''; MB.renderAutoPanel(); };
+      $('.up-list', panel).addEventListener('click', e => {
+        const b = e.target.closest('[data-up]');
+        if (b && MB.buyUp(id, b.dataset.up)) {
+          if (b.dataset.up === 'bot') {
+            MB.toast(`${def.bot.icon} ${def.bot.name} hired! Watch it ${def.bot.verb}.`);
+          } else {
+            MB.toast(`⬆️ ${MB.upDef(id, b.dataset.up).name} → Lv ${MB.up(id, b.dataset.up)}`);
+          }
+          panel.dataset.key = '';
+          MB.renderAutoPanel();
+        }
       });
-    } else {
-      MB.toast(`⬆️ ${def.intern} promoted to Lv ${a.auto}. No raise.`);
     }
-    MB.renderAutoPanel();
+
+    // Live status line + progress toward the bot's next move.
+    const status = $('.bot-status', panel), meter = $('.bot-meter', panel);
+    if (MB.hasBot(id)) {
+      const every = MB.botEvery(id);
+      status.innerHTML = `<b>${def.bot.icon} ${def.bot.name}</b> ${def.bot.verb} every ${every < 10 ? every.toFixed(1) : Math.round(every)}s
+        ${a.botWait ? `<span class="bad">· 💤 waiting: ${a.botWait}</span>` : '<span class="good">· playing</span>'}`;
+      $('div', meter).style.width = `${100 * MB.botProgress(id)}%`;
+      meter.hidden = false;
+    } else if (a.crafts < def.mastery) {
+      status.innerHTML = `<b>🎓 Mastery</b> ${a.crafts}/${def.mastery} ${def.masteryUnit}
+        <span class="small">— prove you can do it, then hire a bot to do it (slowly).</span>`;
+      $('div', meter).style.width = `${(100 * a.crafts) / def.mastery}%`;
+      meter.hidden = false;
+    } else {
+      status.innerHTML = `<b>🎓 Mastered!</b> <span class="small">You can hire ${def.bot.name}. Upgrades are paid in other games’ currencies.</span>`;
+      meter.hidden = true;
+    }
+
+    // Upgrade list: only rebuilt when something about it changes.
+    const ups = def.upgrades;
+    const key = JSON.stringify([expanded[id], ups.map(u => [MB.up(id, u.id), MB.upBlocker(id, u.id)])]);
+    if (panel.dataset.key === key) return;
+    panel.dataset.key = key;
+    const ready = MB.upAvailable(id);
+    $('.up-toggle', panel).innerHTML = `⬆️ Upgrades ${ready ? `<span class="up-ready">${ready} ready</span>` : ''} <span class="small">${expanded[id] ? '▾' : '▸'}</span>`;
+    const list = $('.up-list', panel);
+    list.hidden = !expanded[id];
+    list.innerHTML = ups.map(u => {
+      const lv = MB.up(id, u.id), block = MB.upBlocker(id, u.id);
+      const label = BLOCKED[block] || MB.costText(MB.upCost(id, u.id));
+      return `<div class="up-row ${lv >= u.max ? 'maxed' : ''}">
+        <div class="up-info"><b>${u.name}</b> <span class="small">${u.max > 1 ? `Lv ${lv}/${u.max}` : lv ? '✓' : ''}</span>
+          <div class="small">${u.desc}</div></div>
+        <button class="btn ${block ? '' : 'primary'} up-buy" data-up="${u.id}" ${block ? 'disabled' : ''}>${label}</button>
+      </div>`;
+    }).join('');
   };
 
   MB.watchBoostAd = function () {

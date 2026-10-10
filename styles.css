@@ -56,18 +56,18 @@ button { font: inherit; color: inherit; }
 .notch { width: 110px; height: 26px; background: #000; border-radius: 14px; }
 #battery { color: var(--bad); }
 
-#resbar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 6px 8px 8px; }
+#resbar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; padding: 6px 6px 8px; }
 .res {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 1px;
   min-width: 0;
-  padding: 4px 4px;
+  padding: 3px 2px;
   background: var(--panel);
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 11px;
   transition: opacity .3s;
 }
 .res b { font-variant-numeric: tabular-nums; }
@@ -300,6 +300,7 @@ h3 { font-family: var(--title); font-weight: 400; font-size: 22px; margin: 8px 0
 .auto-panel {
   position: sticky;
   bottom: 0;
+  z-index: 20;
   margin: 0 10px 10px;
   padding: 12px;
   background: #1a1729f2;
@@ -307,8 +308,15 @@ h3 { font-family: var(--title); font-weight: 400; font-size: 22px; margin: 8px 0
   border-radius: 18px;
   backdrop-filter: blur(6px);
 }
-.auto-info { font-size: 14px; }
-.auto-btn { width: 100%; margin-top: 8px; font-size: 14px; }
+.bot-status { font-size: 13px; }
+.bot-meter { margin: 6px 0 4px; }
+.up-toggle { width: 100%; margin-top: 4px; padding: 6px 0 2px; text-align: left; font-weight: 800; background: none; border: 0; cursor: pointer; }
+.up-ready { margin-left: 4px; padding: 1px 7px; border-radius: 99px; background: var(--bad); font-size: 11px; }
+.up-list { max-height: 38vh; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.up-row { display: flex; align-items: center; gap: 8px; padding: 8px; background: var(--panel2); border-radius: 12px; }
+.up-row.maxed { opacity: .55; }
+.up-info { flex: 1; min-width: 0; font-size: 13px; }
+.up-buy { flex: none; max-width: 46%; font-size: 12px; padding: 8px 10px; }
 
 /* --- Screw Loose 3D ------------------------------------------------------------------ */
 .screw-app { display: flex; flex-direction: column; align-items: center; gap: 8px; }
@@ -331,6 +339,19 @@ h3 { font-family: var(--title); font-weight: 400; font-size: 22px; margin: 8px 0
 .screw.out { animation: unscrew .35s ease-in forwards; pointer-events: none; }
 @keyframes stuck { 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
 @keyframes unscrew { to { transform: rotate(-540deg) scale(1.6); opacity: 0; } }
+
+/* Bot cursor, shared by every bot game: sits on its target with a ring that
+   fills as the bot's next move gets closer. */
+.screw-wrap { position: relative; width: 100%; max-width: 340px; }
+.bot-cursor { position: absolute; z-index: 5; width: 0; height: 0; pointer-events: none; transition: left .35s ease, top .35s ease; --p: 0; }
+.bot-cursor i {
+  position: absolute; left: -17px; top: -17px; width: 34px; height: 34px; border-radius: 50%;
+  background: conic-gradient(var(--accent) calc(var(--p) * 360deg), #0006 0);
+  -webkit-mask: radial-gradient(circle, transparent 12px, #000 13px); mask: radial-gradient(circle, transparent 12px, #000 13px);
+}
+.bot-cursor span { position: absolute; left: 6px; top: -40px; font-size: 26px; filter: drop-shadow(0 2px 3px #000); animation: bob 1s ease-in-out infinite; }
+@keyframes bob { 50% { transform: translateY(-3px); } }
+.screw-board.bonus-board { box-shadow: inset 0 0 0 3px var(--accent), 0 0 24px #ffcf3f88; }
 
 /* --- Grind the Thing ------------------------------------------------------------------ */
 .grinder { display: flex; flex-direction: column; gap: 10px; }
@@ -585,6 +606,52 @@ h3 { font-family: var(--title); font-weight: 400; font-size: 22px; margin: 8px 0
 .vill { display: flex; justify-content: space-around; font-size: 34px; }
 .vill span { filter: grayscale(1) opacity(.3); }
 .vill span.built { filter: none; }
+
+/* --- Landlord GO! -------------------------------------------------------------------------- */
+.board-lap { display: flex; flex-direction: column; gap: 10px; }
+.bl-hud { display: flex; justify-content: space-between; font-weight: 800; }
+.bl-board {
+  position: relative; display: grid; grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(6, 1fr);
+  gap: 3px; aspect-ratio: 1; padding: 6px; background: #14532d; border: 3px solid #facc15; border-radius: 16px;
+}
+.bl-tile { display: grid; place-items: center; font-size: 20px; background: #f0fdf4; border-radius: 8px; box-shadow: inset 0 -3px 0 #0002; }
+.blt-go, .blt-jail, .blt-parking, .blt-gojail { background: #fde68a; }
+.blt-chance { background: #fbcfe8; }
+.blt-heist { background: #bfdbfe; }
+.blt-tax { background: #e5e7eb; }
+.blt-sticker { background: #ddd6fe; }
+.bl-token { z-index: 2; display: grid; place-items: start end; padding: 0 1px; font-size: 17px; line-height: 1; pointer-events: none; filter: drop-shadow(0 2px 2px #000a); animation: hop .11s ease-out; }
+@keyframes hop { 50% { transform: translateY(-4px); } }
+.bl-center { grid-column: 2 / 6; grid-row: 2 / 6; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+.bl-landmarks { display: flex; gap: 6px; font-size: 26px; }
+.bl-landmarks span { filter: grayscale(1) opacity(.35); }
+.bl-landmarks span.built { filter: none; }
+.bl-dice { font-size: 40px; line-height: 1; }
+.bl-dice.shaking { animation: crate-shake .12s infinite; }
+.bl-roll { font-family: var(--title); font-size: 20px; padding: 10px 22px; }
+.bl-mult { font-size: 12px; padding: 6px 10px; }
+.bl-msg { min-height: 34px; color: var(--text); font-size: 13px; }
+.bl-album { display: flex; flex-direction: column; gap: 8px; padding: 12px; background: var(--panel); border-radius: 16px; }
+.bl-stickers { display: grid; grid-template-columns: repeat(9, 1fr); gap: 4px; }
+.bl-sticker { aspect-ratio: 1; display: grid; place-items: center; padding: 0; font-size: 20px; border: 1px dashed var(--line); border-radius: 8px; background: none; filter: grayscale(1) opacity(.35); cursor: pointer; }
+.bl-sticker.have { filter: none; border-style: solid; background: #ffffff10; }
+.bl-sticker.gold { border-color: var(--accent); }
+.bl-sticker:not(.have):not(:disabled) { filter: none; opacity: .8; box-shadow: 0 0 0 2px var(--good); }
+
+/* --- Bot touches shared across games ------------------------------------------------------ */
+.merge-wrap, .m3-wrap, .army-wrap { position: relative; }
+.cell.bot-sel, .unit.bot-sel { box-shadow: 0 0 0 3px #7fffd4, 0 0 14px #7fffd4; }
+.hold-wrap { position: relative; display: grid; }
+.bot-arm { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 30px; animation: press .5s ease-in-out infinite; pointer-events: none; }
+@keyframes press { 50% { transform: translateY(-38%) scale(.92); } }
+.slab-bar .bot-cursor span { top: -56px; }
+.gate { position: relative; }
+.gate.bot-pick { box-shadow: 0 0 0 3px #7fffd4, 0 0 18px #7fffd4; }
+.gate-bot {
+  position: absolute; right: -6px; top: -14px; width: 32px; height: 32px; display: grid; place-items: center; font-size: 20px; border-radius: 50%;
+  background: conic-gradient(var(--accent) calc(var(--p, 0) * 360deg), #0008 0);
+}
+.knight-card { border-color: #ffcf3f; }
 
 /* --- Dev Coffee ----------------------------------------------------------------------------- */
 .coffee { display: flex; flex-direction: column; gap: 6px; }

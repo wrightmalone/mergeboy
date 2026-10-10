@@ -4,7 +4,7 @@
 // The parody: upgrade timers, a builder limit, "ask your alliance for help",
 // and a big "FINISH NOW 💎" button. The twist: there is nothing to buy.
 // - Hustle: every hand-played action in ANY game knocks seconds off construction.
-// - Alliance help: your interns are your alliance. Once per build they chip in.
+// - Alliance help: your bots are your alliance. Once per build they chip in.
 // - Finish now: opens a paywall whose price is an errand in another game.
 // Builds keep running while the game is closed.
 (function () {
@@ -78,12 +78,12 @@
   function help(id) {
     const b = buildOf(id);
     if (!b || b.helped) return;
-    const interns = MB.CHAIN.reduce((n, app) => n + MB.app(app).auto, 0);
-    const pct = Math.min(30, 2 * interns);
-    if (!pct) { MB.toast('You have no alliance. Hire some interns. They count.'); return; }
+    const bots = MB.BOT_APPS.filter(MB.hasBot);
+    const pct = Math.min(30, 4 * bots.length);
+    if (!pct) { MB.toast('You have no alliance. Hire some bots. They count.'); return; }
     b.helped = true;
     b.endsAt -= ((b.endsAt - Date.now()) * pct) / 100;
-    MB.toast(`🙋 Your ${interns} intern levels helped: −${pct}%. They are your alliance now.`);
+    MB.toast(`🙋 Your ${bots.length} bots helped: −${pct}%. They are your alliance now.`);
     render();
   }
 
@@ -99,6 +99,7 @@
         { metric: 'match3.win', amount: 1, reward: { type: 'speedup', secs: 600, build: id }, label: '−10 min' },
         { metric: 'army.win', amount: 1, reward: { type: 'speedup', secs: 600, build: id }, label: '−10 min' },
         { metric: 'slicer.slab', amount: 3, reward: { type: 'speedup', secs: 300, build: id }, label: '−5 min' },
+        { metric: 'board.lap', amount: 2, reward: { type: 'speedup', secs: 300, build: id }, label: '−5 min' },
         { metric: 'king.win', amount: 1, reward: { type: 'speedup', finish: true, build: id }, label: 'Finish instantly' },
       ],
       wait: `wait ${fmtTime((b.endsAt - Date.now()) / 1000)} (every hand-played action anywhere takes ${HUSTLE_SECS}s off)`,
@@ -107,7 +108,7 @@
 
   function effect(id) {
     const def = B[id], lv = level(id);
-    if (def.boosts) return `+${Math.round(def.perLevel * 100 * lv)}% ${def.boosts.map(app => MB.APPS[app].icon).join('')} (hands & interns)`;
+    if (def.boosts) return `+${Math.round(def.perLevel * 100 * lv)}% ${def.boosts.map(app => MB.APPS[app].icon).join('')} payouts`;
     return def.desc;
   }
 

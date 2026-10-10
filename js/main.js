@@ -8,20 +8,22 @@
     return h ? `${h}h ${m}m` : m ? `${m}m` : `${Math.floor(secs)}s`;
   }
 
-  // Advance the factory in 1s chunks so upstream output can feed downstream
-  // games within a long gap.
-  function advance(secs, mult) {
-    for (let t = secs; t > 0; t -= 1) MB.simulate(Math.min(1, t), mult);
+  // Let the bots keep playing for a long gap, in short chunks so one game's
+  // output can feed another's within the gap. Offline, a bot makes at most one
+  // move every 2 seconds (it keeps catch-up quick, and we say so).
+  const OFFLINE_CHUNK = 30, OFFLINE_MOVES_PER_CHUNK = 15;
+  function advance(secs) {
+    for (let t = secs; t > 0; t -= OFFLINE_CHUNK) MB.runBots(Math.min(OFFLINE_CHUNK, t), OFFLINE_MOVES_PER_CHUNK);
   }
 
-  // Run the interns for the time the game was closed.
+  // Let the bots play for the time the game was closed.
   function catchUp() {
     const s = MB.state;
     const secs = Math.min((Date.now() - s.lastSeen) / 1000, MAX_OFFLINE_SECS);
     s.lastSeen = Date.now();
-    if (secs < 10 || !MB.CHAIN.some(id => MB.app(id).auto)) return;
+    if (secs < 10 || !MB.BOT_APPS.some(MB.hasBot)) return;
     const before = { ...s.res };
-    advance(secs, 1);
+    advance(secs);
     const lines = Object.keys(MB.RES)
       .map(k => [k, Math.floor(s.res[k]) - Math.floor(before[k])])
       .filter(([, d]) => d)
@@ -29,7 +31,7 @@
     if (!lines.length) return;
     MB.modal({
       title: '📬 While you were away…',
-      body: `<p>Your interns kept playing for ${fmtDuration(secs)}.</p><div class="gains">${lines.join('')}</div><p class="small">They did not enjoy it either. (Offline time is capped at 8 hours, and we tell you that.)</p>`,
+      body: `<p>Your bots kept playing for ${fmtDuration(secs)}.</p><div class="gains">${lines.join('')}</div><p class="small">Every move was a real move on the real board. (Offline, we count up to 8 hours, and each bot makes at most one move every 2 seconds. We tell you that.)</p>`,
       buttons: [{ label: 'Collect', primary: true }],
     });
   }
@@ -59,7 +61,7 @@
     breakShown = true;
     MB.modal({
       title: '🧘 You’ve been playing for 20 minutes',
-      body: '<p>Stretch? Drink some water? Your interns will keep playing while you’re gone, and nothing here expires.</p>',
+      body: '<p>Stretch? Drink some water? Your bots will keep playing while you’re gone, and nothing here expires.</p>',
       buttons: [{ label: 'Good idea', primary: true }],
     });
   }
@@ -71,7 +73,7 @@
       title: '📱 Welcome to your phone',
       body: `<p>Every game on here is the game from the ad. Each one makes something the next one needs.</p>
         <p class="chain">🪛 → 🔩 → ⚙️ → 💨 → 👦 → 🧱 → 🔪 → 🟫 → 🤴</p>
-        <p>Play them. Master them. Then hire an intern to play them for you.</p>
+        <p>Play them. Master them. Then hire a bot to play them for you, very slowly at first. Upgrades cost the <i>other</i> games’ currencies.</p>
         <p>Somewhere in here, a King needs rescuing.</p>`,
       buttons: [{ label: "Let's grind", primary: true }],
     });
@@ -97,7 +99,7 @@
   function tick() {
     const now = Date.now(), secs = Math.min((now - lastTick) / 1000, MAX_OFFLINE_SECS);
     lastTick = now;
-    advance(secs);
+    MB.runBots(secs);
     for (const fn of MB.tickers) fn();
     MB.state.lastSeen = now;
     MB.renderResBar();
@@ -121,6 +123,11 @@
   requestAnimationFrame(frame);
   setInterval(tick, 250);
 
-  document.addEventListener('visibilitychange', () => { if (document.hidden) MB.save(); });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { MB.save(); return; }
+    // Bots kept playing headlessly while we were hidden; redraw the open game from its state.
+    const cur = MB.currentApp();
+    if (cur) MB.openApp(cur.id);
+  });
   window.addEventListener('pagehide', () => MB.save());
 })();

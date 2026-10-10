@@ -3,7 +3,8 @@
 // winning in the other games. The odds are printed on the machine. There is no
 // double-down bet. Hammers and pigs only "attack" an NPC goose, who is fine.
 // Coins build a goose village; each building pays out gems, so this is the
-// honest place gems come from.
+// honest place gems come from. Spin Bot pulls the lever for you, but only ever
+// spends spins you earned.
 (function () {
   const MB = window.MB;
   const SYMBOLS = [
@@ -21,7 +22,7 @@
     'No hard feelings. Literally none. I am an NPC. — Goose',
   ];
   // Spins come from winning (hand-played) in other games.
-  const SPIN_SOURCES = { 'match3.win': 1, 'army.win': 1, 'king.win': 2, 'crowd.win': 1, 'merge.slab': 1, 'slicer.slab': 1 };
+  const SPIN_SOURCES = { 'match3.win': 1, 'army.win': 1, 'king.win': 2, 'crowd.win': 1, 'merge.slab': 1, 'slicer.slab': 1, 'board.lap': 1 };
 
   let root, spinning = false, token = 0;
   const a = () => MB.app('spin');
@@ -70,6 +71,7 @@
       options: [
         { metric: 'match3.win', amount: 1, reward: { type: 'spins', n: 3 }, label: '+3 spins' },
         { metric: 'army.win', amount: 1, reward: { type: 'spins', n: 3 }, label: '+3 spins' },
+        { metric: 'board.lap', amount: 1, reward: { type: 'spins', n: 2 }, label: '+2 spins' },
         { metric: 'screw.plate', amount: 6, reward: { type: 'spins', n: 1 }, label: '+1 spin' },
       ],
       wait: 'just win anything, anywhere: every win elsewhere earns a spin',
@@ -100,31 +102,46 @@
     root.querySelector('.build-btn')?.addEventListener('click', build);
   }
 
-  async function spin() {
-    if (spinning) return;
+  // Spin now; the view animates the reels from the event.
+  function spinOnce(by) {
     init();
     const s = a();
-    if (s.spins < 1) return spinPaywall();
+    if (s.spins < 1) return 'no spins (win games elsewhere to earn them)';
     s.spins--;
+    const reels = [roll(), roll(), roll()], p = payout(reels);
+    if (p.coins) s.coins += Math.round(p.coins * MB.outMult('spin'));
+    if (p.gem) MB.give({ gem: p.gem });
+    if (p.spins) s.spins += p.spins;
+    if (by === 'you') s.crafts++;
+    MB.gameEvent('spin', { type: 'spin', reels: reels.map(r => r.s), text: p.text, note: p.note, by });
+    return '';
+  }
+
+  MB.registerBot('spin', { act: () => spinOnce('bot') || undefined });
+
+  function spin() {
+    if (spinning) return;
+    if (spinOnce('you')) spinPaywall();
+  }
+
+  async function animate(evt) {
     spinning = true;
-    const my = token, reels = [roll(), roll(), roll()];
-    const els = [...root.querySelectorAll('.reel')];
+    MB.busy.spin = true;
+    const my = token, els = [...root.querySelectorAll('.reel')];
     els.forEach(e => e.classList.add('rolling'));
     for (let i = 0; i < 3; i++) {
       await new Promise(r => setTimeout(r, 450));
-      if (my !== token) { spinning = false; return; }
+      if (my !== token) break;
       els[i].classList.remove('rolling');
-      els[i].textContent = reels[i].s;
+      els[i].textContent = evt.reels[i];
     }
-    const p = payout(reels);
-    if (p.coins) s.coins += Math.round(p.coins * MB.handMult('spin'));
-    if (p.gem) MB.give({ gem: p.gem });
-    if (p.spins) s.spins += p.spins;
     spinning = false;
+    MB.busy.spin = false;
+    if (my !== token) return;
     render();
-    root.querySelector('.spin-msg').textContent = p.text;
-    root.querySelectorAll('.reel').forEach((e, i) => { e.textContent = reels[i].s; });
-    if (p.note) MB.toast(`💌 ${NOTES[Math.floor(Math.random() * NOTES.length)]}`);
+    root.querySelector('.spin-msg').textContent = `${evt.by === 'bot' ? '🤖 ' : ''}${evt.text}`;
+    root.querySelectorAll('.reel').forEach((e, i) => { e.textContent = evt.reels[i]; });
+    if (evt.note) MB.toast(`💌 ${NOTES[Math.floor(Math.random() * NOTES.length)]}`);
   }
 
   function build() {
@@ -146,12 +163,13 @@
   }
 
   MB.apps.spin = {
-    mount(el) { root = el; token++; spinning = false; render(); },
+    mount(el) { root = el; token++; spinning = false; MB.busy.spin = false; render(); },
+    onEvent(evt) { if (root && evt.type === 'spin') animate(evt); },
     refresh() {
       if (!root || spinning) return;
       const btn = root.querySelector('.spin-btn');
       if (btn) btn.textContent = `SPIN · ${a().spins} left`;
     },
-    unmount() { token++; root = null; },
+    unmount() { token++; MB.busy.spin = false; root = null; },
   };
 })();

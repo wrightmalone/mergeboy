@@ -23,64 +23,60 @@ This one rule gives the whole design its shape:
 | ⚙️ Grind the Thing | idle tycoons | 💨 Dust | *(none)* |
 | 👦 Merge Boy | merge-2 games | 🧱 Slabs | 💡 energy bar → errands |
 | 🔪 Slice It All! | slicing hypercasual | 🟫 Blocks | *(none)* |
-| 🤴 Rescue the King | Hero Wars / Homescapes pin ads | 💰 Gold + the main goal | 💡 Hint (💎) → merge slabs / clear a match-3 level |
+| 🤴 Rescue the King | Hero Wars / Homescapes pin ads | 💰 Gold + the main goal | Hint (💎) → errands |
 | 🍬 Match Royale | Candy Crush / Royal Match | ⭐ Stars (+ a bit of everything) | Out of lives / "+5 moves" / hammers → errands |
 | 🪖 Last Army: Merge War | Top War / Last War | 🎖️ Medals | Out of ⚡ / "SO CLOSE! Power Pack" → errands |
 | 🏃 Crowd Run 3D | Count Masters, the Last War ad | Recruits → Last Army | Lost to the boss → "revive" errand |
 | 🎰 Goose Master | Coin Master | 💎 Gems (via goose village) | Out of spins → **only** wins elsewhere give spins |
-| 🏰 Clash of Kingdoms | Clash of Clans / 4X | Permanent boosts for other games | Build timers → hustle, intern "alliance help", errands |
-| 🎁 Lucky Crate | gacha | random resources / interns | Out of 💎 → errands |
+| 🎲 Landlord GO! | Monopoly GO | 🔩💨🧱🟫💰⭐ from tiles; landmarks cost 🟫 + 💰 | Out of dice → **only** wins elsewhere give dice; ×3 multiplier cap; sticker duplicates trade in |
+| 🏰 Clash of Kingdoms | Clash of Clans / 4X | Permanent boosts for other games | Build timers → hustle, bot "alliance help", errands |
+| 🎁 Lucky Crate | gacha | random resources / a free upgrade level | Out of 💎 → errands |
 | 👑 VIP Store | IAP shops | jokes priced in resources | — |
 | ☕ Dev Coffee | — | nothing, on purpose | the one real-money link |
 
-## The links: seven mechanisms
+## The links
 
 ```mermaid
 flowchart LR
-  screw[🪛 Screw<br/>🔩 Scrap] -->|🔩| grinder[⚙️ Grinder<br/>💨 Dust]
-  grinder -->|💨| merge[👦 Merge Boy<br/>🧱 Slabs]
-  merge -->|🧱| slicer[🔪 Slicer<br/>🟫 Blocks]
-  king[🤴 King<br/>💰 Gold] -->|💰 recruits| army[🪖 Last Army<br/>🎖️ Medals]
-  screw -->|🔩 recruits| army
+  screw[🪛 Screw<br/>🔩] -->|🔩| grinder[⚙️ Grinder<br/>💨]
+  grinder -->|💨| merge[👦 Merge Boy<br/>🧱]
+  merge -->|🧱| slicer[🔪 Slicer<br/>🟫]
+  king[🤴 King<br/>💰] -->|💰 recruits| army[🪖 Last Army<br/>🎖️]
   crowd[🏃 Crowd Run] -->|recruits| army
-  match3[🍬 Match Royale<br/>⭐ Stars] -->|⭐| base[🏰 Clash of Kingdoms]
-  army -->|🎖️| base
-  slicer -->|🟫| base
-  slicer -->|🟫 🧱 💨 🔩| king
-  match3 -->|⭐| king
-  army -->|🎖️| king
-  base -.->|+% boosts| screw & grinder & merge & slicer & king & match3 & army
-  wins((any win)) -.->|spins| spin[🎰 Goose Master<br/>💎 Gems]
-  spin -->|💎| crate[🎁 Crate]
-  spin -->|💎| king
+  upgrades{{every game's upgrades<br/>paid in OTHER games' currencies}}
+  screw & grinder & merge & slicer & king & army -.-> upgrades
+  match3[🍬 Match Royale<br/>⭐] -.-> upgrades
+  slicer & match3 & army -->|🟫 ⭐ 🎖️| base[🏰 Clash of Kingdoms]
+  base -.->|+% payouts, faster bots| upgrades
+  slicer & match3 & army -->|materials| king
+  wins((any win)) -.->|spins| spin[🎰 Goose Master<br/>💎]
+  wins -.->|dice| board[🎲 Landlord GO!]
 ```
 
 1. **Production chain (inputs).** 🔩 → 💨 → 🧱 → 🟫 down the line. Last Army recruits cost
    🔩 + 💰.
-2. **Salaries (a loop).** Each intern is paid per run in *another* game's resource:
-   - Screw ← 💨
-   - Grinder ← 🧱
-   - Merge ← 🟫
-   - Slicer ← 💰
-   - Knight ← 🔩
-   - Candy Intern ← 🎖️
-   - Drill Sergeant ← ⭐
+2. **Bots you can watch.** Each production game can hire a bot after you've mastered it by hand.
+   - **It really plays.** It makes real moves on the board you see, starting slow (Screwbot: one
+     screw every 15 s).
+   - **It keeps going offline.** While the app is closed it plays headlessly, by the same rules.
+   - **It has limits.** It never uses lives, energy or dice it didn't earn.
+   - **It never runs your errands.**
+3. **Upgrade trees, paid in other games' currencies.** Every game has its bot's hire and speed
+   upgrades plus game-specific ones that change the game itself, for your hands too.
+   - **Screw Loose:** more plates per board (a bigger clear bonus), golden ×3 plates, ✨ bonus
+     boards.
 
-   A paid intern works 2×; an unpaid one quiet-quits at 1×. That loops the end of the chain back
-   to the start, and Match Royale ↔ Last Army pay each other.
-3. **Upgrade costs.** Each intern upgrade costs other games' resources. For example, Screw Lv2
-   needs 🟫 and Lv4+ needs 💰.
+   Each upgrade line costs 2–3 *other* currencies, so wanting a faster Screwbot sends you to
+   Grind the Thing and Merge Boy.
 4. **The main goal.** Rescue the King's 9 stages cost materials from across the phone. Late
    stages need ⭐ and 🎖️ too.
-5. **Clash of Kingdoms boosts.** Buildings turn ⭐ 🎖️ 🟫 💰 into permanent +% for other games:
+5. **Clash of Kingdoms boosts.** Buildings turn currencies into permanent +% payouts:
    - Workshop → 🪛⚙️
    - Lab → 👦🔪
-   - Treasury → 🤴🍬
-   - Barracks → 🪖
+   - Treasury → 🤴🍬🎲
+   - Barracks → 🪖🏃
    - Candy Factory → +❤️/⚡ caps
-   - Dorms → cheaper salaries
-
-   The base is where resources become permanent.
+   - Bot Garage → every bot moves sooner
 6. **Errands (the paywall replacement).** `js/errands.js`:
    - A paywall screen shows a crossed-out real-world price and 2–4 errands in other games.
    - Accepting one jumps you to that game.
@@ -89,15 +85,7 @@ flowchart LR
      its +5 moves, a building finishes, energy refills.
 7. **Cross-game "any action" hooks.**
    - Every hand-played action anywhere knocks 10 s off construction ("hustle").
-   - Every win anywhere gives a Goose Master spin.
-
-   Playing *anything* moves *everything* forward a little.
-
-**Manual play always beats automation.**
-
-- Hand-played output is ×(1 + intern level) × King bonus × building bonus.
-- An intern works 2× while you watch its game.
-- Interns don't run errands.
+   - Every win anywhere gives Goose Master spins and Landlord GO! dice.
 
 ## Proposed next
 
@@ -105,9 +93,8 @@ Based on the research ([RESEARCH.md](RESEARCH.md)), roughly in order of value:
 
 | Next game | Parody of | How it would link |
 | --- | --- | --- |
-| **Board Lap** | Monopoly GO | Dice only from wins elsewhere; ×3 multiplier cap; sticker album with duplicate trade-in. Produces 💰 or ⭐; landmarks cost 🟫. |
 | **Capsule Hero** | Raid / Genshin gacha | Summon tokens from Goose Master and King stages; odds + pity counter printed on the button; heroes give % boosts to Last Army. |
-| **Keep Warm** | Whiteout Survival's furnace | A sink for 💨 Dust (as coal); telegraphed blizzards; "survivors" boost interns. Gives the grinder late-game purpose. |
+| **Keep Warm** | Whiteout Survival's furnace | A sink for 💨 Dust (as coal); telegraphed blizzards; "survivors" speed up bots. Gives the grinder late-game purpose. |
 | **Supply Run** + honest shop | State of Survival | Minesweeper-lite producing 🔩/💰; the shop shows "WAS $997.40" and tapping it reveals an honest price history. |
 | **Survivor-lite** | Survivor.io | 3-minute arena run with no energy; when you hit a wall it names which game to play for the upgrade. |
 | **Merge Boy energy** | Merge Mansion | Give Merge Boy a (fast) energy bar refilled by errands, the most famous paywall moment we don't parody yet. |
@@ -129,24 +116,22 @@ Smaller ideas from the research:
    - keep them as is,
    - make them opt-in only (the 2× boost button), or
    - add a setting.
-3. **How many games?** There are now 13 icons. New players may want a slower unlock order, or a
+3. **How many games?** There are now 14 icons. New players may want a slower unlock order, or a
    "folder" for side games (Crate, Goose Master, Crowd Run).
 4. **Names.** "Clash of Kingdoms", "Last Army", "Match Royale" and "Goose Master" are meant as
    parody. If this ships publicly, a quick trademark/parody check would be worth it.
 5. **Coffee link.** Set `MB.COFFEE_URL` when you have one. Until then the button says "coming
    soon".
 6. **Balance.** None of the numbers have had a full-playthrough pass. `node tools/sim-economy.js
-   [level] [hours]` runs the interns headlessly. Findings so far:
-   - With every intern at the same level and nobody playing, nothing deadlocks; unpaid interns
-     just work at 1×.
-   - The **dust → slab** stretch is the bottleneck: the Grinder ends up unpaid 😒 (the Slicer
-     eats every slab first), Merge and Slicer starve 💤, and scrap piles up.
-   - That's arguably the design working: it tells you to play Merge Boy or Grind the Thing.
-     Whether equal levels *should* balance is your call.
+   [speed] [hours]` runs every bot headlessly, with the real game code. Findings so far:
+   - **Nothing deadlocks.**
+   - **🧱 Slabs are the scarce currency:** Merge Bot needs ~15 moves per slab.
+   - **The Knight was dominant at first.** He now keeps half of each run ("he has a horse to
+     feed").
 
 ## Known gaps (as of this pass)
 
-- **Not balanced end to end:** unlock costs, salaries and building prices are first guesses.
+- **Not balanced end to end:** unlock costs, upgrade prices and building prices are first guesses.
 - **Thin flows:** Match Royale has no special tiles beyond the 🚀 row-clear (no bombs or
   colour-clears yet).
 - **Old saves** carry over, but nothing migrates them. Use ⟲ to reset if something looks off.

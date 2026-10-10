@@ -21,7 +21,10 @@
   MB.onTrack = fn => listeners.push(fn);
 
   MB.track = function (metric, n = 1) {
-    for (const fn of listeners) fn(metric, n);
+    // One game's listener failing must never break the game that reported the action.
+    for (const fn of listeners) {
+      try { fn(metric, n); } catch (err) { console.error('MB.track listener failed', metric, err); }
+    }
     for (const e of [...MB.state.errands]) {
       if (e.metric !== metric) continue;
       e.progress = Math.min(e.amount, e.progress + n);

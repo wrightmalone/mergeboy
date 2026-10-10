@@ -87,10 +87,10 @@ the original wording.
 - **The ASA upheld a complaint:** the ads showed puzzles, but the core game is city-building, and falling behind there locks you out of the puzzles. ([ASA ruling](https://asa.org.uk/rulings/top-games-inc-a23-1213924-top-games-inc.html))
 - **MergeBoy twist:** the puzzle in the ad is the puzzle on the phone, and it's never gated.
 
-**7. Rise of Kingdoms** (Lilith). 🟡 *alliance help = your interns*
+**7. Rise of Kingdoms** (Lilith). 🟡 *alliance help = your bots*
 
 - **Pressure:** VIP buffs, whale-dominated events, and free players being told to support spenders. ([RoK Guides](https://riseofkingdomsguides.com/is-rise-of-kingdoms-pay-to-win-game-pay-to-win-vs-free-to-play/))
-- **MergeBoy twist:** "alliance help" in Clash of Kingdoms comes from your own interns. Nothing is competitive.
+- **MergeBoy twist:** "alliance help" in Clash of Kingdoms comes from your own bots. Nothing is competitive.
 
 **8. Clash of Clans** (Supercell). ✅ *Clash of Kingdoms*
 
@@ -152,7 +152,7 @@ the original wording.
   - "Remove ads" purchases that reportedly don't remove all ads. ([game-solver](https://game-solver.com/screw-jam/))
 - **MergeBoy twist:** no real ads, every level is solvable, and plates drop scrap for the whole factory.
 
-**14. Idle / incremental tycoons**. ✅ *Grind the Thing* + interns
+**14. Idle / incremental tycoons**. ✅ *Grind the Thing* + watchable bots
 
 - **Pressure:** hidden offline-earnings caps, "watch an ad for 2×", and "remove ads" that doesn't. ([justuseapp](https://justuseapp.com/en/app/1435697033/rocket-star-idle-tycoon-game/contact))
 - **Egg, Inc.** is the transparent counterexample. ([PocketGamer.biz](https://www.pocketgamer.biz/egg-inc-idle-games-gold-standard/))
@@ -180,14 +180,14 @@ the original wording.
   - No double-down.
   - Raids only hit an NPC goose, who leaves apology notes.
 
-**17. Monopoly GO!** (Scopely). 💡 *Board Lap*
+**17. Monopoly GO!** (Scopely). ✅ *Landlord GO!*
 
 - **Pressure:**
   - Dice refills that can't keep up with daily goals.
   - Roll multipliers up to ×1000.
   - Sticker albums with rare gold stickers.
   - Partner events that need friends. ([IGGM](https://www.iggm.com/news/monopoly-go-dice-shortages-sticker-grinding-and-pay-to-win-mechanics-are-driving-players-crazy))
-- **Proposed:** dice come only from wins elsewhere, multiplier capped at ×3, and duplicate stickers trade in to guarantee completion.
+- **MergeBoy twist:** dice come only from wins elsewhere, the multiplier is capped at ×3 (and says it doesn't change value per die), and 3 duplicate stickers buy any missing one, so every album finishes. Heists only rob the goose.
 
 ### Gacha
 
@@ -227,9 +227,9 @@ the original wording.
 | 10 | Slot-machine core loop | Coin Master, Monopoly GO | Goose Master: labelled as a slot machine, spins only from wins | ✅ |
 | 11 | Bet escalation | Coin Master, Monopoly GO | No double-down | ✅ |
 | 12 | VIP spend ladders | Last War, RoK, Whiteout | VIP Store is all jokes, priced in resources | ✅ |
-| 13 | Alliance obligation | RoK, Last War, Kingshot | "Alliance help" = your interns; nothing competitive | ✅ |
+| 13 | Alliance obligation | RoK, Last War, Kingshot | "Alliance help" = your bots; nothing competitive | ✅ |
 | 14 | Power creep | Last War, Whiteout | Finite: the King can be fully rescued; credits roll | ✅ |
-| 15 | Rare-item albums | Monopoly GO, Coin Master | Board Lap duplicate trade-in | 💡 |
+| 15 | Rare-item albums | Monopoly GO, Coin Master | Landlord GO! duplicate trade-in | ✅ |
 | 16 | Abundance-then-scarcity events | Royal Match | No events | ✅ |
 | 17 | Interstitials / "remove ads" that doesn't | Screw puzzles, runners, idle | Only fake parody ads; Remove Ads actually removes them | ✅ |
 | 18 | Hidden offline cap + ad doubler | Idle tycoons | 8h cap stated openly | ✅ |
